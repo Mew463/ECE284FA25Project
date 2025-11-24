@@ -86,8 +86,8 @@ core  #(.bw(bw), .col(col), .row(row)) core_instance (
 	.clk(clk), 
 	.inst(inst_q),
 	.ofifo_valid(ofifo_valid),
-  .D_xmem(D_xmem_q), 
-  .sfp_out(sfp_out), 
+        .D_xmem(D_xmem_q), 
+        .sfp_out(sfp_out), 
 	.reset(reset)); 
 
 
@@ -133,9 +133,7 @@ initial begin
 
   /////// Activation data writing to memory ///////
   for (t=0; t<len_nij; t=t+1) begin  
-    #0.5 clk = 1'b0;  x_scan_file = $fscanf(x_file,"%32b", D_xmem); // Load the activations (inputs) into core.v
-    WEN_xmem = 0; CEN_xmem = 0; 
-    if (t>0) A_xmem = A_xmem + 1;
+    #0.5 clk = 1'b0;  x_scan_file = $fscanf(x_file,"%32b", D_xmem); WEN_xmem = 0; CEN_xmem = 0; if (t>0) A_xmem = A_xmem + 1;
     #0.5 clk = 1'b1;   
   end
 
@@ -146,7 +144,7 @@ initial begin
   /////////////////////////////////////////////////
 
 
-  for (kij=0; kij<9; kij=kij+1)     // kij loop
+  for (kij=0; kij<9; kij=kij+1) begin  // kij loop
 
     case(kij)
      0: w_file_name = "weight_itile0_otile0_kij0.txt";
@@ -181,10 +179,13 @@ initial begin
     #0.5 clk = 1'b0;   
     #0.5 clk = 1'b1;   
 
-    /////// Kernel data writing to memory ///////
-    // Load the weights into core.v
 
-    A_xmem = 11'b10000000000; // Starting at address 1024 the weights are loaded
+
+
+
+    /////// Kernel data writing to memory ///////
+
+    A_xmem = 11'b10000000000;
 
     for (t=0; t<col; t=t+1) begin  
       #0.5 clk = 1'b0;  w_scan_file = $fscanf(w_file,"%32b", D_xmem); WEN_xmem = 0; CEN_xmem = 0; if (t>0) A_xmem = A_xmem + 1; 
@@ -198,10 +199,6 @@ initial begin
 
 
     /////// Kernel data writing to L0 ///////
-    
-
-
-
     ...
     /////////////////////////////////////
 
