@@ -182,7 +182,7 @@ initial begin
     #0.5 clk = 1'b1;   
 
     /////// Kernel data writing to memory ///////
-    // Load the weights into core.v
+    // Load the weights into core.v's ACTIVATION_WEIGHTS_sram
 
     A_xmem = 11'b10000000000; // Starting at address 1024 the weights are loaded
 
@@ -193,31 +193,30 @@ initial begin
 
     #0.5 clk = 1'b0;  WEN_xmem = 1;  CEN_xmem = 1; A_xmem = 0;
     #0.5 clk = 1'b1; 
-    /////////////////////////////////////
 
-
-
-    /////// Kernel data writing to L0 ///////
-    
-
-
-
-    ...
-    /////////////////////////////////////
-
-
+    /////// Kernel data writing to L0 /////// 
+    // Make ACTIVATION_WEIGHTS_sram give the weights to the L0
+    A_xmem = 11'b10000000000; // Since the weights are loaded at address 1024, make sure we start there
+    for (t=0; t<col; t=t+1) begin  
+      #0.5 clk = 1'b0; WEN_xmem = 1; CEN_xmem = 0; l0_wr = 1; if (t>0) A_xmem = A_xmem + 1; 
+      #0.5 clk = 1'b1;  
+    end
+    #0.5 clk = 1'b0;  WEN_xmem = 1;  CEN_xmem = 1; A_xmem = 0; l0_wr = 0;// CHIP UNENABLE
+    #0.5 clk = 1'b1; 
 
     /////// Kernel loading to PEs ///////
-    ...
-    /////////////////////////////////////
-  
-
+    // L0 pass the weights to PE
+    for (t=0; t< col + row; t=t+1) begin // Takes 8 + 8 cycles for weights to propagate
+      #0.5 clk = 1'b0; l0_rd = 1; load = 1;
+      #0.5 clk = 1'b1;  
+    end
+    #0.5 clk = 1'b0;  l0_rd = 0; load = 0;
+    #0.5 clk = 1'b1; 
 
     ////// provide some intermission to clear up the kernel loading ///
-    #0.5 clk = 1'b0;  load = 0; l0_rd = 0;
+    #0.5 clk = 1'b0;  l0_rd = 0; load = 0; 
     #0.5 clk = 1'b1;  
   
-
     for (i=0; i<10 ; i=i+1) begin
       #0.5 clk = 1'b0;
       #0.5 clk = 1'b1;  
@@ -226,24 +225,46 @@ initial begin
 
 
 
-    /////// Activation data writing to L0 ///////
-    ...
+    /////// Whole Activation processing cycle ///////
+    /*
+    1) SRAM(activation) -> L0
+    2) L0 -> PE (execute)
+    3) Is there a complete row in OFIFO filled? 
+      Yes: Accumulate
+    4) Repeat
+    5) Store output in PSUM SRAM
+    */
+    A_xmem = 0; // Starting at address 0 the activations are loaded
+
+    //preload one activation into L0 then start executing (L0 write + L0 read + execute)
+    
+    for (t=0; t<len_nij + col; t=t+1) begin  
+      #0.5 clk = 1'b0; 
+      l0_wr = 1;
+      WEN_xmem = 1; CEN_xmem = 0; if (t>0) A_xmem = A_xmem + 1; // SRAM -> L0  
+      #0.5 clk = 1'b1;  
+      
+      #0.5 clk = 1'b0; 
+      CEN_xmem = 1; // Disable SRAM
+      l0_wr = 0; // Disable L0 writing
+      l0_rd = 1; execute = 1; // L0 -> PE  
+      #0.5 clk = 1'b1;
+      
+      #0.5 clk = 1'b0;  
+      l0_rd = 0; execute = 0; // Disable L0 and PE execute
+      #0.5 clk = 1'b1;
+      
+      // Accumulate step??
+      if (t > row * col) begin // after these many clock cycles we are able to read a complete row from OFIFO
+        #0.5 clk = 1'b0; ofifo_rd = 1;
+        #0.5 clk = 1'b1;
+        #0.5 clk = 1'b0;
+        #0.5 clk = 1'b1;
+      end
+
+      
+    end
     /////////////////////////////////////
-
-
-
-    /////// Execution ///////
-    ...
-    /////////////////////////////////////
-
-
-
-    //////// OFIFO READ ////////
-    // Ideally, OFIFO should be read while execution, but we have enough ofifo
-    // depth so we can fetch out after execution.
-    ...
-    /////////////////////////////////////
-
 
   end  // end of kij loop
 
@@ -315,8 +336,8 @@ initial begin
   end
 
   #10 $finish;
-
 end
+
 
 always @ (posedge clk) begin
    inst_w_q   <= inst_w; 

@@ -16,7 +16,7 @@ module sram_32b_w2048 (CLK, D, Q, CEN, WEN, A);
 
   always @ (posedge CLK) begin
 
-   if (!CEN && WEN) // read 
+   if (!CEN && WEN) // read  
       add_q <= A;
    if (!CEN && !WEN) // write
       memory[A] <= D; 

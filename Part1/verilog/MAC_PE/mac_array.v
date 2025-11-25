@@ -9,13 +9,13 @@ module mac_array (clk, reset, out_s, in_w, in_n, inst_w, valid);
 
   input  clk, reset;
   output [psum_bw*col-1:0] out_s;
-  input  [row*bw-1:0] in_w; // inst[1]:execute, inst[0]: kernel loading
-  input  [1:0] inst_w;
+  input  [row*bw-1:0] in_w; 
+  input  [1:0] inst_w; // inst[1]:execute, inst[0]: kernel loading
   input  [psum_bw*col-1:0] in_n;
   output [col-1:0] valid;
 
 
-  reg    [2*row-1:0] inst_w_temp;
+  reg    [2*row-1:0] inst_w_temp; //Importantly, the instruction is passed north to south, 
   wire   [psum_bw*col*(row+1)-1:0] temp;
   wire   [row*col-1:0] valid_temp;
 
@@ -49,6 +49,17 @@ module mac_array (clk, reset, out_s, in_w, in_n, inst_w, valid);
     inst_w_temp[11:10] <= inst_w_temp[9:8]; 
     inst_w_temp[13:12] <= inst_w_temp[11:10]; 
     inst_w_temp[15:14] <= inst_w_temp[13:12]; 
+
+    // Potential alpha??
+    // inst_w_temp[1:0]   <= inst_w; 
+    // inst_w_temp[3:2]   <= inst_w;
+    // inst_w_temp[5:4]   <= inst_w;
+    // inst_w_temp[7:6]   <= inst_w;
+    // inst_w_temp[9:8]   <= inst_w;
+    // inst_w_temp[11:10] <= inst_w;
+    // inst_w_temp[13:12] <= inst_w; 
+    // inst_w_temp[15:14] <= inst_w; 
+
   end
 
 
