@@ -12,6 +12,10 @@
 ./verilog/MAC_PE/mac_tile.v
 ./verilog/MAC_PE/mac.v
 
-./verilog/sram_32b_w2048.v
+./verilog/SRAM/sram_32b_w2048.v
+./verilog/SRAM/sram_128b_1address.v
 
-./verilog/core_tb.v
+./verilog/SFP/sfp.v
+
+./core.v
+./core_tb.v

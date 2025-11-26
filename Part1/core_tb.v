@@ -10,7 +10,7 @@ parameter len_kij = 9;
 parameter len_onij = 16;
 parameter col = 8;
 parameter row = 8;
-parameter len_nij = 36;
+parameter len_nij = 8;
 
 reg clk = 0;
 reg reset = 1;
@@ -57,13 +57,14 @@ reg [8*30:1] stringvar;
 reg [8*30:1] w_file_name;
 wire ofifo_valid;
 wire [col*psum_bw-1:0] sfp_out;
+reg [col-1:0] psum_sram_ptr;
 
 integer x_file, x_scan_file ; // file_handler
 integer w_file, w_scan_file ; // file_handler
 integer acc_file, acc_scan_file ; // file_handler
 integer out_file, out_scan_file ; // file_handler
 integer captured_data; 
-integer t, i, j, k, kij;
+integer t, i, j, k, kij, a;
 integer error;
 
 assign inst_q[33] = acc_q;
@@ -105,9 +106,11 @@ initial begin
   l0_wr    = 0;
   execute  = 0;
   load     = 0;
-
+  psum_sram_ptr = 0;
+  
   $dumpfile("core_tb.vcd");
   $dumpvars(0,core_tb);
+  $display("hello");
 
   x_file = $fopen("activation_tile0.txt", "r");
   // Following three lines are to remove the first three comment lines of the file
@@ -146,7 +149,7 @@ initial begin
   /////////////////////////////////////////////////
 
 
-  for (kij=0; kij<9; kij=kij+1)     // kij loop
+  for (kij=0; kij<9; kij=kij+1) begin    // kij loop
 
     case(kij)
      0: w_file_name = "weight_itile0_otile0_kij0.txt";
@@ -235,35 +238,44 @@ initial begin
     5) Store output in PSUM SRAM
     */
     A_xmem = 0; // Starting at address 0 the activations are loaded
+    //preload one activation into L0
+    #0.5 clk = 1'b0; 
+    l0_wr = 1;
+    WEN_xmem = 1; CEN_xmem = 0;
+    #0.5 clk = 1'b1; 
+    #0.5 clk = 1'b0; 
+    A_xmem = A_xmem + 1; // Increment read address
 
-    //preload one activation into L0 then start executing (L0 write + L0 read + execute)
-    
-    for (t=0; t<len_nij + col; t=t+1) begin  
+    for (t=0; t<len_nij + col + row; t=t+1) begin  // 36 + 8 = 44, 
       #0.5 clk = 1'b0; 
-      l0_wr = 1;
-      WEN_xmem = 1; CEN_xmem = 0; if (t>0) A_xmem = A_xmem + 1; // SRAM -> L0  
-      #0.5 clk = 1'b1;  
-      
-      #0.5 clk = 1'b0; 
-      CEN_xmem = 1; // Disable SRAM
-      l0_wr = 0; // Disable L0 writing
-      l0_rd = 1; execute = 1; // L0 -> PE  
-      #0.5 clk = 1'b1;
-      
-      #0.5 clk = 1'b0;  
-      l0_rd = 0; execute = 0; // Disable L0 and PE execute
-      #0.5 clk = 1'b1;
-      
-      // Accumulate step??
-      if (t > row * col) begin // after these many clock cycles we are able to read a complete row from OFIFO
-        #0.5 clk = 1'b0; ofifo_rd = 1;
-        #0.5 clk = 1'b1;
-        #0.5 clk = 1'b0;
-        #0.5 clk = 1'b1;
+      if(t<len_nij + col) begin
+
+        A_xmem = A_xmem + 1; // Increment for SRAM -> L0
+        l0_rd = 1; execute = 1; // L0 -> PE  
+      end
+      else begin
+        l0_rd = 0; execute = 0; // L0 -> PE : 44 --> 52
+      end
+      // Read from OFIFO - Accumulate step
+      // t = 8 first ofifo slot full, t = 16 ofifo full read/accum, t = 36 + 16 = 52 
+
+      if (ofifo_valid) begin // read a complete row from OFIFO
+        ofifo_rd = 1;
+       // OFIFO is full -> Read inputs for SFP
+        // ofifo_out[col*psum_bw-1:0] will have value
+        accumulate = 1'b1;
+        WEN_pmem = 1'b0; // write to psum
+        // sram_out would have a new value now
       end
 
-      
+        #0.5 clk = 1'b1; 
     end
+    #0.5 clk = 1'b0; 
+    CEN_xmem = 1; // Disable SRAM
+    l0_wr = 0; // Disable L0 writing
+    l0_rd = 0; execute = 0; // Disable L0 and PE execute
+    ofifo_rd = 0; // Disable ofifo reading
+    #0.5 clk = 1'b1;
     /////////////////////////////////////
 
   end  // end of kij loop

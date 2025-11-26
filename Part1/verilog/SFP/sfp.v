@@ -6,6 +6,7 @@ module sfp(psum_in, ofifo_in, accum, sfp_out );
     parameter psum_bw = 16;
 
     input [psum_bw-1:0] psum_in, ofifo_in;
+    input accum;
     output [psum_bw-1:0] sfp_out;
 
     reg [psum_bw-1:0] sum;

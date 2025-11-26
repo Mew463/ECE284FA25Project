@@ -53,7 +53,7 @@ module l0 (clk, in, out, rd, wr, o_full, reset, o_ready, all_row_at_a_time);
             rd_en <= 8'b0;
          end
       end 
-      else begin
+      else begin // probably always going to be using the below case
          //////////////// version2: read 1 row at a time /////////////////
          if (rd) begin 
             rd_en <= {rd_en[row-2:0], 1'b1};

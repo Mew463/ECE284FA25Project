@@ -12,9 +12,9 @@ module core(clk, inst, ofifo_valid, D_xmem, sfp_out, reset);
     output [col*psum_bw-1:0] sfp_out; // Final output
     input reset;
 
-
+    wire [psum_bw*col-1:0] D_xmem_128_bit; 
     wire  [col*psum_bw-1:0] ofifo_out;
-    reg  [col*psum_bw-1:0] sram_in;
+    wire  [col*psum_bw-1:0] sram_in;
     wire  [col*psum_bw-1:0] sram_out;
     reg  [col*psum_bw-1:0] sram_out_reg;
     wire [psum_bw*col-1:0] out_s;
@@ -36,11 +36,12 @@ module core(clk, inst, ofifo_valid, D_xmem, sfp_out, reset);
     wire load       = inst[0];
 
 
-    wire [row*bw-1:0] sram_l0_bridge; 
+    wire [psum_bw*col-1:0] sram_l0_bridge; 
     wire [row*bw-1:0] l0_mac_bridge;
 
 
     wire ofifo_full, ofifo_ready, ofifo_valid;
+    wire [col-1:0] mac_ofifo_valid_bridge;
     ofifo outputfifo (
         .clk(clk),
         .in(out_s),
@@ -53,7 +54,6 @@ module core(clk, inst, ofifo_valid, D_xmem, sfp_out, reset);
         .o_valid(ofifo_valid)
     );
 
-    wire [col-1:0] mac_ofifo_valid_bridge;
     mac_array macarray (
         .clk(clk),
         .reset(reset),
@@ -64,20 +64,17 @@ module core(clk, inst, ofifo_valid, D_xmem, sfp_out, reset);
         .valid(mac_ofifo_valid_bridge)
     );
 
-    //sram_32b_w2048 (clk, D, Q, CEN, WEN, A);
-
-    sram_32b_w2048 PSUM_sram (
-        .clk(clk),
+    sram_128b_1address PSUM_sram (
+        .CLK(clk),
         .D(sram_in), // input data
         .Q(sram_out),  // output data
-        .CEN(CEN_pmem), // clock enable (when high, do nothing)
-        .WEN(WEN_pmem), // write enable (when low, write to address)
-        .A(A_pmem) // Address
+        .CEN(CEN_pmem), // clock enable (when high, don't write)
+        .WEN(WEN_pmem) // write enable (when low, write to address)
     );
-
+    assign D_xmem_128_bit = {{96{1'b0}}, D_xmem};
     sram_32b_w2048 ACTIVATION_WEIGHTS_sram (
-        .clk(clk),
-        .D(D_xmem), // input data
+        .CLK(clk),
+        .D(D_xmem_128_bit), // input data
         .Q(sram_l0_bridge),  // output data
         .CEN(CEN_xmem), // clock enable (when high, do nothing)
         .WEN(WEN_xmem), // write enable (when low, write to address)
@@ -89,7 +86,7 @@ module core(clk, inst, ofifo_valid, D_xmem, sfp_out, reset);
     // reg all_row_at_a_time;
     l0 WEST_l0 (
         .clk(clk),
-        .in(sram_l0_bridge),
+        .in(sram_l0_bridge[row*bw-1:0]),
         .out(l0_mac_bridge),
         .rd(l0_rd),
         .wr(l0_wr),
@@ -101,10 +98,10 @@ module core(clk, inst, ofifo_valid, D_xmem, sfp_out, reset);
     
     wire accumulate = 1'b1;
     genvar sfp_i; // Could use this variable (and rename) for everything that needs 1 per col
-    for(sfp_i = 1; sfp_i <= col; sfp_i += 1) begin
+    for(sfp_i = 1; sfp_i <= col; sfp_i = sfp_i + 1) begin
         sfp SFP(
             .psum_in(sram_out[psum_bw*sfp_i - 1: psum_bw*(sfp_i-1)]),
-            .ofifo_in(ofifo_out[col*psum_bw-1:0]),
+            .ofifo_in(ofifo_out[psum_bw*sfp_i - 1: psum_bw*(sfp_i-1)]),
             .accum(accumulate),
             .sfp_out(sram_in[psum_bw*sfp_i - 1: psum_bw*(sfp_i-1)])
         );
@@ -114,38 +111,7 @@ module core(clk, inst, ofifo_valid, D_xmem, sfp_out, reset);
     // Kernel data writing to L0
     // assign all_row_at_a_time = load && l0_rd; 
     always @(posedge clk) begin
-
-        /*
-        *****************************************************************
-        STATE: RESET
-        ******************************************************************
-        */
-
-        /*
-        *****************************************************************
-        STATE: Kernel data writing to L0
-        ******************************************************************
-        */
-
-        /*
-        *****************************************************************
-        STATE: loading weights into the mac array
-        ******************************************************************
-        */
-
-        /*
-        *****************************************************************
-        STATE: loading weights into the mac array
-        ******************************************************************
-        */
-
-        /*
-        *****************************************************************
-        STATE: Mac array execution and OFIFO filling
-        ******************************************************************
-        */
-
-        /*
+        /*Z
         *****************************************************************
         STATE: loading Psum from SRAM and accumulation from OFIFO to SRAM
         ******************************************************************
@@ -157,27 +123,33 @@ module core(clk, inst, ofifo_valid, D_xmem, sfp_out, reset);
         // Write to PSUM_SRAM 
         
         // How does OFIFO become empty?
-        if(o_valid) begin // OFIFO is full -> Read inputs for SFP
-            if(!WEN_pmem) begin
-            // we wrote this cycle, so read next cycle
-                A <= // address
+        // if(o_valid) begin // OFIFO is full -> Read inputs for SFP
+        //     if(!WEN_pmem) begin
+        //     // we wrote this cycle, so read next cycle
+        //     // output [col*psum_bw-1:0] sfp_out; // Final output
+        //     // wire  [col*psum_bw-1:0] ofifo_out;
+        //     // reg  [col*psum_bw-1:0] sram_in;
+        //     // wire  [col*psum_bw-1:0] sram_out;
+        //         A_pmem <= psum_sram_ptr; // address
                 
-                // ofifo_out[col*psum_bw-1:0] will have value
-                WEN_pmem <= 1'b1; // read from that address
-                // sram_out would have a new value now
-                accumulate <= 1'b1;
+        //         // ofifo_out[col*psum_bw-1:0] will have value
+        //         WEN_pmem <= 1'b1; // read from that address
+        //         // sram_out would have a new value now
+        //         accumulate <= 1'b1;
                 
-                // SFU will have sram_in data ready to be written
-            end
-            else begin // write
-                WEN_pmem <= 1'b0;
-            end
+        //         // SFU will have sram_in data ready to be written
+        //     end
+        //     else begin // write
+        //         WEN_pmem <= 1'b0;
+        //     end
+        //     psum_sram_ptr <= psum_sram_ptr + 1;
+        // end
+        // else if(o_empty && !WEN_pmem) begin
+        //     if()
+        //     WEN_pmem <= 1; // read from PSUM_SRAM
+        //     accumulate <= 1'b0; // do ReLU
             
-        end
-        else if(o_empty && !WEN_pmem) begin
-            WEN_pmem <= 1; // read from PSUM_SRAM
-            accumulate <= 1'b0; // do ReLU
-        end
+        // end
         
 
 
