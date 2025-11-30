@@ -12,12 +12,13 @@ module core(clk, inst, ofifo_valid, D_xmem, sfp_out, reset);
     output [col*psum_bw-1:0] sfp_out; // Final output
     input reset;
 
-    wire [psum_bw*col-1:0] D_xmem_128_bit; 
+    wire  [psum_bw*col-1:0] D_xmem_128_bit; 
     wire  [col*psum_bw-1:0] ofifo_out;
     wire  [col*psum_bw-1:0] sram_in;
+    reg   [col*psum_bw-1:0] sram_in_reg;
     wire  [col*psum_bw-1:0] sram_out;
-    reg  [col*psum_bw-1:0] sram_out_reg;
-    wire [psum_bw*col-1:0] out_s;
+    reg   [col*psum_bw-1:0] sram_out_reg;
+    wire  [psum_bw*col-1:0] out_s;
 
     // Expand the instruction bus from the core_tb
     wire acc        = inst[33];
@@ -95,13 +96,12 @@ module core(clk, inst, ofifo_valid, D_xmem, sfp_out, reset);
         .all_row_at_a_time(1'b0) // Dont use for vanilla version (or ever probably)
     );
     
-    wire accumulate = 1'b1;
     genvar sfp_i; // Could use this variable (and rename) for everything that needs 1 per col
     for(sfp_i = 1; sfp_i <= col; sfp_i = sfp_i + 1) begin
         sfp SFP(
             .psum_in(sram_out[psum_bw*sfp_i - 1: psum_bw*(sfp_i-1)]),
             .ofifo_in(ofifo_out[psum_bw*sfp_i - 1: psum_bw*(sfp_i-1)]),
-            .accum(accumulate),
+            .accum(acc),
             .sfp_out(sram_in[psum_bw*sfp_i - 1: psum_bw*(sfp_i-1)])
         );
     end
@@ -110,29 +110,38 @@ module core(clk, inst, ofifo_valid, D_xmem, sfp_out, reset);
     // Kernel data writing to L0
     // assign all_row_at_a_time = load && l0_rd; 
     always @(posedge clk) begin
-        /*Z
-        *****************************************************************
-        STATE: loading Psum from SRAM and accumulation from OFIFO to SRAM
-        ******************************************************************
-        */
+        if (reset) begin
+            sram_in_reg <= 0;
+        end
+        else
+        sram_in_reg <= sram_in;
+        // /*Z
+        // *****************************************************************
+        // STATE: loading Psum from SRAM and accumulation from OFIFO to SRAM
+        // ******************************************************************
+        // */
 
-        // once the ofifo is full --> if(ofifo_full)
-        // Read from PSUM_SRAM 
-        // Read from ofifo 
-        // Write to PSUM_SRAM 
-        
+        // // once the ofifo is full --> if(ofifo_full)
+        // // Read from PSUM_SRAM 
+        // // Read from ofifo 
+        // // Write to PSUM_SRAM 
+        // reg [10:0] A_pmem_reg;
+        // assign A_pmem = A_pmem_reg;
+        // reg WEN_pmem_reg;
+        // assign WEN_pmem = WEN_pmem_reg;
+
         // How does OFIFO become empty?
-        // if(o_valid) begin // OFIFO is full -> Read inputs for SFP
+        // if(ofifo_valid) begin // OFIFO is full -> Read inputs for SFP
         //     if(!WEN_pmem) begin
         //     // we wrote this cycle, so read next cycle
         //     // output [col*psum_bw-1:0] sfp_out; // Final output
         //     // wire  [col*psum_bw-1:0] ofifo_out;
         //     // reg  [col*psum_bw-1:0] sram_in;
         //     // wire  [col*psum_bw-1:0] sram_out;
-        //         A_pmem <= psum_sram_ptr; // address
+        //         A_pmem_reg <= psum_sram_ptr; // address
                 
         //         // ofifo_out[col*psum_bw-1:0] will have value
-        //         WEN_pmem <= 1'b1; // read from that address
+        //         WEN_pmem_reg <= 1'b1; // read from that address
         //         // sram_out would have a new value now
         //         accumulate <= 1'b1;
                 
@@ -143,8 +152,8 @@ module core(clk, inst, ofifo_valid, D_xmem, sfp_out, reset);
         //     end
         //     psum_sram_ptr <= psum_sram_ptr + 1;
         // end
-        // else if(o_empty && !WEN_pmem) begin
-        //     if()
+        // else if(!accumulate && !WEN_pmem) begin
+        //     // if()
         //     WEN_pmem <= 1; // read from PSUM_SRAM
         //     accumulate <= 1'b0; // do ReLU
             

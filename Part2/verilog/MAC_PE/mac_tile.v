@@ -3,12 +3,12 @@ module mac_tile (clk, out_s, in_w, out_e, in_n, inst_w, inst_e, reset);
 parameter bw = 4;
 parameter psum_bw = 16;
 
-output [psum_bw-1:0] out_s;
-input  [bw-1:0] in_w; // inst[1]:execute, inst[0]: kernel loading
-output [bw-1:0] out_e; 
-input  [1:0] inst_w;
-output [1:0] inst_e;
-input  [psum_bw-1:0] in_n;
+output [psum_bw-1:0] out_s; //SOUTH OUTPUT
+input  [bw-1:0] in_w; //WEST WEIGHT/ACT INPUT
+output [bw-1:0] out_e; //EAST WEIGHT/ACT OUTPUT
+input  [1:0] inst_w;   // inst[1]:execute, inst[0]: kernel loading
+output [1:0] inst_e;    //EAST INST OUTPUT
+input  [psum_bw-1:0] in_n;  //PSUM NORTH INPUT
 input  clk;
 input  reset;
 

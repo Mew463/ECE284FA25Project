@@ -14,5 +14,6 @@ module sfp(psum_in, ofifo_in, accum, sfp_out );
     assign sfp_out = accum ? 
         psum_in + ofifo_in : // Accumulator
         (psum_in < 0 ? 0 : psum_in); // ReLU
+    
 
 endmodule
