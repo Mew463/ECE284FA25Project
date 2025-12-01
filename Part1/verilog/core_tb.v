@@ -283,6 +283,7 @@ initial begin
           acc = 0;
           sfu_passthrough = 1; // make SFU pass first KIJ index; ofifo goes to psum sram
           WEN_pmem = 1; // write to psum 
+          A_pmem = A_pmem + 1;
   
         end else begin
           sfu_passthrough = 0;
@@ -386,7 +387,7 @@ always @ (posedge clk) begin
    D_xmem_q   <= D_xmem;
    CEN_xmem_q <= CEN_xmem;
    WEN_xmem_q <= WEN_xmem;
-   A_pmem   <= A_pmem;
+   A_pmem_q   <= A_pmem;
    CEN_pmem_q <= CEN_pmem;
    WEN_pmem_q <= WEN_pmem;
    REN_pmem_q <= REN_pmem;

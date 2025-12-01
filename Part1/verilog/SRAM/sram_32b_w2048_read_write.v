@@ -3,7 +3,7 @@
 module sram_32b_w2048_read_write (CLK, D, Q, CEN, WEN, REN, A);
 
   input  CLK;
-  input  REN; // Read Envvvvable, read when high
+  input  REN; // Read Enable, read when high
   input  WEN; // Write Enable, write when high
   input  CEN; // Clock Enable, enable when low
   input  [127:0] D;
