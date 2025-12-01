@@ -101,7 +101,7 @@ module core(clk, inst, ofifo_valid, D_xmem, sfp_out, reset);
         .all_row_at_a_time(1'b0) // Dont use for vanilla version (or ever probably)
     );
     
-    genvar sfp_i; // Could use this variable (and rename) for everything that needs 1 per col
+    genvar sfp_i; 
     for(sfp_i = 1; sfp_i <= col; sfp_i = sfp_i + 1) begin
         sfp SFP(
             .psum_in(sram_out[psum_bw*sfp_i - 1: psum_bw*(sfp_i-1)]),

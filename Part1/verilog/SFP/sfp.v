@@ -13,8 +13,8 @@ module sfp(psum_in, ofifo_in, accum, sfp_out, passthrough);
     reg [psum_bw-1:0] sum;
 
 assign sfp_out =
-    accum        ? (psum_in + ofifo_in) :       // accumulation
     passthrough  ? ofifo_in :                   // passthrough path
+    accum        ? (psum_in + ofifo_in) :       // accumulation
                    (psum_in < 0 ? 0 : psum_in); // ReLU
     
     

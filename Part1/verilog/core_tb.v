@@ -262,8 +262,8 @@ initial begin
     WEN_xmem = 1; CEN_xmem = 0;
     #0.5 clk = 1'b1; 
     //A_xmem = A_xmem + 1; // Increment read address
-
-    for (t=0; t<len_nij + col + row; t=t+1) begin  // 36 + 8 = 44, 
+    bool 
+    for (t=0; t<len_nij + col + row + 1; t=t+1) begin  // 36 + 8 = 44, 
       #0.5 clk = 1'b0; 
       if(t<len_nij) begin
 
@@ -280,23 +280,27 @@ initial begin
         CEN_pmem = 0; // Activate PMEM
         ofifo_rd = 1;
         if (kij == 0) begin  
-          acc = 0;
           sfu_passthrough = 1; // make SFU pass first KIJ index; ofifo goes to psum sram
+          acc = 0;
           WEN_pmem = 1; // write to psum 
           A_pmem = A_pmem + 1;
-  
         end else begin
           sfu_passthrough = 0;
           acc = 1;
           A_pmem = A_pmem + 1;
+
+
           WEN_pmem = 1; // Write to last APMEM (delayed by one clock cycle via register)
-          REN_pmem = 1; // Read APMEM + 1
+          // REN_pmem = 1; // Read APMEM + 1
         end
       end
 
         #0.5 clk = 1'b1; 
     end
-    #0.5 clk = 1'b0; 
+
+    #0.5 clk = 1'b0;
+    $timeformat(-9, 2, " ns", 20); // Unit in ns (-9), 2 decimal places, " ns" suffix, field width 20 
+    $display("kij = %d, sfpout: %16b sfpout: %d time: %t", kij, sfp_out[15:0],sfp_out[15:0], $time);
     CEN_xmem = 1; // Disable SRAM weights/activation
     CEN_pmem = 1; // Disable SRAM psum 
     l0_wr = 0; // Disable L0 writing
