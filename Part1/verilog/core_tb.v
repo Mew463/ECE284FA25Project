@@ -221,7 +221,7 @@ initial begin
       #0.5 clk = 1'b0; load = 1;
       #0.5 clk = 1'b1;  
     end
-
+    #0.5 clk = 1'b0; #0.5 clk = 1'b1;
 
     ////// provide some intermission to clear up the kernel loading ///
     #0.5 clk = 1'b0;  l0_rd = 0; load = 0; 
