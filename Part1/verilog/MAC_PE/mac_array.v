@@ -40,16 +40,20 @@ module mac_array (clk, reset, out_s, in_w, in_n, inst_w, valid);
 
   always @ (posedge clk) begin
 
-
-    //valid <= valid_temp[row*col-1:row*col-8];
-    inst_w_temp[1:0]   <= inst_w; 
-    inst_w_temp[3:2]   <= inst_w_temp[1:0]; 
-    inst_w_temp[5:4]   <= inst_w_temp[3:2]; 
-    inst_w_temp[7:6]   <= inst_w_temp[5:4]; 
-    inst_w_temp[9:8]   <= inst_w_temp[7:6]; 
-    inst_w_temp[11:10] <= inst_w_temp[9:8]; 
-    inst_w_temp[13:12] <= inst_w_temp[11:10]; 
-    inst_w_temp[15:14] <= inst_w_temp[13:12]; 
+    if (reset) begin
+      inst_w_temp <= 0;
+    end
+    else begin
+      //valid <= valid_temp[row*col-1:row*col-8];
+      inst_w_temp[1:0]   <= inst_w; 
+      inst_w_temp[3:2]   <= inst_w_temp[1:0]; 
+      inst_w_temp[5:4]   <= inst_w_temp[3:2]; 
+      inst_w_temp[7:6]   <= inst_w_temp[5:4]; 
+      inst_w_temp[9:8]   <= inst_w_temp[7:6]; 
+      inst_w_temp[11:10] <= inst_w_temp[9:8]; 
+      inst_w_temp[13:12] <= inst_w_temp[11:10]; 
+      inst_w_temp[15:14] <= inst_w_temp[13:12]; 
+    end
 
     // Potential alpha??
     // inst_w_temp[1:0]   <= inst_w; 

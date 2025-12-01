@@ -7,7 +7,7 @@ module core(clk, inst, ofifo_valid, D_xmem, sfp_out, reset);
 
     input clk;
     input [33:0] inst; // instruction to handle everything
-    input ofifo_valid; 
+    output ofifo_valid; 
     input [bw*row-1:0] D_xmem; // Handles weight and activation data 
     output [col*psum_bw-1:0] sfp_out; // Final output
     input reset;
@@ -97,14 +97,16 @@ module core(clk, inst, ofifo_valid, D_xmem, sfp_out, reset);
     );
     
     genvar sfp_i; // Could use this variable (and rename) for everything that needs 1 per col
-    for(sfp_i = 1; sfp_i <= col; sfp_i = sfp_i + 1) begin
-        sfp SFP(
-            .psum_in(sram_out[psum_bw*sfp_i - 1: psum_bw*(sfp_i-1)]),
-            .ofifo_in(ofifo_out[psum_bw*sfp_i - 1: psum_bw*(sfp_i-1)]),
-            .accum(acc),
-            .sfp_out(sram_in[psum_bw*sfp_i - 1: psum_bw*(sfp_i-1)])
-        );
-    end
+    generate
+        for(sfp_i = 1; sfp_i <= col; sfp_i = sfp_i + 1) begin
+            sfp SFP(
+                .psum_in(sram_out[psum_bw*sfp_i - 1: psum_bw*(sfp_i-1)]),
+                .ofifo_in(ofifo_out[psum_bw*sfp_i - 1: psum_bw*(sfp_i-1)]),
+                .accum(acc),
+                .sfp_out(sram_in[psum_bw*sfp_i - 1: psum_bw*(sfp_i-1)])
+            );
+        end
+    endgenerate
     assign sfp_out = sram_in;
     
     // Kernel data writing to L0

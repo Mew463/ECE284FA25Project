@@ -5,6 +5,7 @@ module sram_128b_1address (CLK, D, Q, CEN, WEN);
   input  CLK;
   input  WEN;
   input  CEN;
+  input  reset;
   input  [127:0] D;
   output [127:0] Q;
 
@@ -15,7 +16,9 @@ module sram_128b_1address (CLK, D, Q, CEN, WEN);
   assign Q = memory;
 
   always @ (posedge CLK) begin
-   if (!CEN && !WEN) // write
+   if(memory === 128'hx) 
+      memory <= 0;
+   else if (!CEN && !WEN) // write
       memory <= D; 
   end
 

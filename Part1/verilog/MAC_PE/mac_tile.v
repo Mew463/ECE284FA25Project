@@ -44,6 +44,12 @@ always @(posedge clk) begin
         end
 
         c_q <= in_n;
+        // if (inst_w[1] == 1) begin
+        //     c_q <= mac_out;  // store new psum
+        // end
+        // else if (inst_w[0] == 0 && load_ready_q == 0) begin
+        //     c_q <= in_n;
+        // end
     end
 
     if (load_ready_q == 0) begin
@@ -53,5 +59,6 @@ end
 assign out_e = a_q;
 assign inst_e = inst_q;
 assign out_s = mac_out;
+// assign out_s = c_q;
 
 endmodule

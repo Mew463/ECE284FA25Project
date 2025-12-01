@@ -88,13 +88,13 @@ core  #(.bw(bw), .col(col), .row(row)) core_instance (
   .sfp_out(sfp_out), 
 	.reset(reset)); 
 
-initial begin
-  $dumpfile("core_tb.vcd");
-  $dumpvars(0,core_tb);
-  $display("TB STILL RUNNING");
-  #10;
-  // $finish;
-end 
+// initial begin
+//   $dumpfile("core_tb.vcd");
+//   $dumpvars(0,core_tb);
+//   $display("TB STILL RUNNING");
+//   #10;
+//   // $finish;
+// end 
 
 initial begin 
   
@@ -112,9 +112,9 @@ initial begin
   load     = 0;
   psum_sram_ptr = 0;
 
-  // $dumpfile("core_tb.vcd");
-  // $dumpvars(0,core_tb);
-  // $display("hello");
+  $dumpfile("core_tb.vcd");
+  $dumpvars(0,core_tb);
+  $display("TB IS RUNNING");
 
   x_file = $fopen("activation_tile0.txt", "r");
   // Following three lines are to remove the first three comment lines of the file
@@ -193,8 +193,10 @@ initial begin
 
     A_xmem = 11'b10000000000; // Starting at address 1024 the weights are loaded
 
+    // $display("Kernel writing to memory");
     for (t=0; t<col; t=t+1) begin  
       #0.5 clk = 1'b0;  w_scan_file = $fscanf(w_file,"%32b", D_xmem); WEN_xmem = 0; CEN_xmem = 0; if (t>0) A_xmem = A_xmem + 1; 
+      // $display("t = %0d, w_scan_file = %0d", t, w_scan_file);
       #0.5 clk = 1'b1;  
     end
 
@@ -203,6 +205,7 @@ initial begin
 
     /////// Kernel data writing to L0 /////// 
     // Make ACTIVATION_WEIGHTS_sram give the weights to the L0
+    // $display("Kernel writing to L0");
     A_xmem = 11'b10000000000; // Since the weights are loaded at address 1024, make sure we start there
     #0.5 clk = 1'b0; WEN_xmem = 1; CEN_xmem = 0;
     #0.5 clk = 1'b1; 
@@ -267,6 +270,7 @@ initial begin
       // t = 8 first ofifo slot full, t = 16 ofifo full read/accum, t = 36 + 16 = 52 
 
       if (ofifo_valid) begin // read a complete row from OFIFO
+        CEN_pmem = 0;
         ofifo_rd = 1;
        // OFIFO is full -> Read inputs for SFP
         // ofifo_out[col*psum_bw-1:0] will have value
@@ -278,7 +282,8 @@ initial begin
         #0.5 clk = 1'b1; 
     end
     #0.5 clk = 1'b0; 
-    CEN_xmem = 1; // Disable SRAM
+    CEN_xmem = 1; // Disable SRAM weights/activation
+    CEN_pmem = 1; // Disable SRAM psum
     l0_wr = 0; // Disable L0 writing
     l0_rd = 0; execute = 0; // Disable L0 and PE execute
     ofifo_rd = 0; // Disable ofifo reading
