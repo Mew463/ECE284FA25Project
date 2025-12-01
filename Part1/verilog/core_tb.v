@@ -206,7 +206,7 @@ initial begin
     A_xmem = 11'b10000000000; // Since the weights are loaded at address 1024, make sure we start there
     #0.5 clk = 1'b0; WEN_xmem = 1; CEN_xmem = 0;
     #0.5 clk = 1'b1; 
-    for (t=0; t<col; t=t+1) begin  
+    for (t=0; t<col +1; t=t+1) begin  
       #0.5 clk = 1'b0; l0_wr = 1; if (t>0) A_xmem = A_xmem + 1; 
       #0.5 clk = 1'b1;  
     end
