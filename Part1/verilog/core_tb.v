@@ -10,7 +10,7 @@ parameter len_kij = 9;
 parameter len_onij = 16;
 parameter col = 8;
 parameter row = 8;
-parameter len_nij = 8;
+parameter len_nij = 36;
 
 reg clk = 0;
 reg reset = 1;
@@ -206,7 +206,7 @@ initial begin
     A_xmem = 11'b10000000000; // Since the weights are loaded at address 1024, make sure we start there
     #0.5 clk = 1'b0; WEN_xmem = 1; CEN_xmem = 0;
     #0.5 clk = 1'b1; 
-    for (t=0; t<col; t=t+1) begin  
+    for (t=0; t<col +1; t=t+1) begin  
       #0.5 clk = 1'b0; l0_wr = 1; if (t>0) A_xmem = A_xmem + 1; 
       #0.5 clk = 1'b1;  
     end
@@ -215,13 +215,13 @@ initial begin
 
     /////// Kernel loading to PEs ///////
     // L0 pass the weights to PE
-    l0_rd = 1; #0.5 clk = 1'b0; #0.5 clk = 1'b1; //Need one cycle for L0 to propogate signal to first column
+    #0.5 clk = 1'b0; l0_rd = 1; 
+    #0.5 clk = 1'b1; //Need one cycle for L0 to propogate signal to first column
     for (t=0; t< col + row; t=t+1) begin // Takes 8 + 8 cycles for weights to propagate
       #0.5 clk = 1'b0; load = 1;
       #0.5 clk = 1'b1;  
     end
-    #0.5 clk = 1'b0;  l0_rd = 0; load = 0;
-    #0.5 clk = 1'b1; 
+    // #0.5 clk = 1'b0; #0.5 clk = 1'b1;
 
     ////// provide some intermission to clear up the kernel loading ///
     #0.5 clk = 1'b0;  l0_rd = 0; load = 0; 
@@ -247,15 +247,14 @@ initial begin
     A_xmem = 0; // Starting at address 0 the activations are loaded
     //preload one activation into L0
     #0.5 clk = 1'b0; 
-    l0_wr = 1;
+    l0_wr = 1; l0_rd = 1;
     WEN_xmem = 1; CEN_xmem = 0;
     #0.5 clk = 1'b1; 
-    #0.5 clk = 1'b0; 
-    A_xmem = A_xmem + 1; // Increment read address
+    //A_xmem = A_xmem + 1; // Increment read address
 
     for (t=0; t<len_nij + col + row; t=t+1) begin  // 36 + 8 = 44, 
       #0.5 clk = 1'b0; 
-      if(t<len_nij + col) begin
+      if(t<len_nij) begin
 
         A_xmem = A_xmem + 1; // Increment for SRAM -> L0
         l0_rd = 1; execute = 1; // L0 -> PE  
