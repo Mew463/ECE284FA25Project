@@ -21,7 +21,7 @@ module sram_32b_w2048_read_write (CLK, D, Q, CEN, WEN, REN, A);
 
   always @ (posedge CLK) begin
 
-   if (!CEN && REN) begin // read  
+   if (!CEN) begin // read  
       add_q <= A;
       add_q_prev <= add_q;
    end
