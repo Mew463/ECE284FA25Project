@@ -6,8 +6,8 @@ module core(clk, inst, ofifo_valid, D_xmem, sfp_out, reset);
     parameter row = 8; //input channels
 
     input clk;
-    input [33:0] inst; // instruction to handle everything
-    input ofifo_valid; 
+    input [63:0] inst; // instruction to handle everything
+    output ofifo_valid; 
     input [bw*row-1:0] D_xmem; // Handles weight and activation data 
     output [col*psum_bw-1:0] sfp_out; // Final output
     input reset;
@@ -21,6 +21,8 @@ module core(clk, inst, ofifo_valid, D_xmem, sfp_out, reset);
     wire  [psum_bw*col-1:0] out_s;
 
     // Expand the instruction bus from the core_tb
+    wire REN_pmem = inst[35];
+    wire passthrough = inst[34];
     wire acc        = inst[33];
     wire CEN_pmem   = inst[32];
     wire WEN_pmem   = inst[31];
@@ -64,13 +66,16 @@ module core(clk, inst, ofifo_valid, D_xmem, sfp_out, reset);
         .valid(mac_ofifo_valid_bridge)
     );
 
-    sram_128b_1address PSUM_sram (
+    sram_32b_w2048_read_write PSUM_sram (
         .CLK(clk),
         .D(sram_in), // input data
         .Q(sram_out),  // output data
         .CEN(CEN_pmem), // clock enable (when high, don't write)
-        .WEN(WEN_pmem) // write enable (when low, write to address)
+        .REN(REN_pmem), // When high, read
+        .WEN(WEN_pmem), // When high, write 
+        .A(A_pmem) // Read pointer is always one ahead of the write pointer
     );
+    
     assign D_xmem_128_bit = {{96{1'b0}}, D_xmem};
     sram_32b_w2048 ACTIVATION_WEIGHTS_sram (
         .CLK(clk),
@@ -102,7 +107,8 @@ module core(clk, inst, ofifo_valid, D_xmem, sfp_out, reset);
             .psum_in(sram_out[psum_bw*sfp_i - 1: psum_bw*(sfp_i-1)]),
             .ofifo_in(ofifo_out[psum_bw*sfp_i - 1: psum_bw*(sfp_i-1)]),
             .accum(acc),
-            .sfp_out(sram_in[psum_bw*sfp_i - 1: psum_bw*(sfp_i-1)])
+            .sfp_out(sram_in[psum_bw*sfp_i - 1: psum_bw*(sfp_i-1)]),
+            .passthrough(passthrough)
         );
     end
     assign sfp_out = sram_in;
@@ -113,8 +119,9 @@ module core(clk, inst, ofifo_valid, D_xmem, sfp_out, reset);
         if (reset) begin
             sram_in_reg <= 0;
         end
-        else
-        sram_in_reg <= sram_in;
+        else begin
+            sram_in_reg <= sram_in;
+        end
         // /*Z
         // *****************************************************************
         // STATE: loading Psum from SRAM and accumulation from OFIFO to SRAM

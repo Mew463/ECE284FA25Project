@@ -1,2 +1,2 @@
-iveri filelist
+iverilog -s core_tb -f filelist -o compiled ./verilog/core_tb.v
 irun

@@ -15,7 +15,7 @@ parameter len_nij = 36;
 reg clk = 0;
 reg reset = 1;
 
-wire [33:0] inst_q;
+wire [63:0] inst_q;
 
 reg [bw*row-1:0] D_xmem_q = 0;
 reg CEN_xmem = 1;
@@ -39,6 +39,10 @@ reg execute_q = 0;
 reg load_q = 0;
 reg acc_q = 0;
 reg acc = 0;
+reg sfu_passthrough_q = 0;
+reg sfu_passthrough;
+reg REN_pmem_q = 0;
+reg REN_pmem;
 
 reg [bw*row-1:0] D_xmem;
 reg [psum_bw*col-1:0] answer;
@@ -56,6 +60,7 @@ wire ofifo_valid;
 wire [col*psum_bw-1:0] sfp_out;
 reg [col-1:0] psum_sram_ptr;
 
+
 integer x_file, x_scan_file ; // file_handler
 integer w_file, w_scan_file ; // file_handler
 integer acc_file, acc_scan_file ; // file_handler
@@ -64,6 +69,8 @@ integer captured_data;
 integer t, i, j, k, kij, a;
 integer error;
 
+assign inst_q[35] = REN_pmem_q;
+assign inst_q[34] = sfu_passthrough_q;
 assign inst_q[33] = acc_q;
 assign inst_q[32] = CEN_pmem_q;
 assign inst_q[31] = WEN_pmem_q;
@@ -110,7 +117,10 @@ initial begin
   l0_wr    = 0;
   execute  = 0;
   load     = 0;
+  REN_pmem = 0;
+  WEN_pmem = 0;
   psum_sram_ptr = 0;
+  sfu_passthrough = 0;
 
   // $dumpfile("core_tb.vcd");
   // $dumpvars(0,core_tb);
@@ -245,6 +255,7 @@ initial begin
     5) Store output in PSUM SRAM
     */
     A_xmem = 0; // Starting at address 0 the activations are loaded
+    A_pmem = 0;
     //preload one activation into L0
     #0.5 clk = 1'b0; 
     l0_wr = 1; l0_rd = 1;
@@ -266,18 +277,27 @@ initial begin
       // t = 8 first ofifo slot full, t = 16 ofifo full read/accum, t = 36 + 16 = 52 
 
       if (ofifo_valid) begin // read a complete row from OFIFO
+        CEN_pmem = 0; // Activate PMEM
         ofifo_rd = 1;
-       // OFIFO is full -> Read inputs for SFP
-        // ofifo_out[col*psum_bw-1:0] will have value
-        acc = 1'b1;
-        WEN_pmem = 1'b0; // write to psum
-        // sram_out would have a new value now
+        if (kij == 0) begin  
+          acc = 0;
+          sfu_passthrough = 1; // make SFU pass first KIJ index; ofifo goes to psum sram
+          WEN_pmem = 1; // write to psum 
+  
+        end else begin
+          sfu_passthrough = 0;
+          acc = 1;
+          A_pmem = A_pmem + 1;
+          WEN_pmem = 1; // Write to last APMEM (delayed by one clock cycle via register)
+          REN_pmem = 1; // Read APMEM + 1
+        end
       end
 
         #0.5 clk = 1'b1; 
     end
     #0.5 clk = 1'b0; 
-    CEN_xmem = 1; // Disable SRAM
+    CEN_xmem = 1; // Disable SRAM weights/activation
+    CEN_pmem = 1; // Disable SRAM psum 
     l0_wr = 0; // Disable L0 writing
     l0_rd = 0; execute = 0; // Disable L0 and PE execute
     ofifo_rd = 0; // Disable ofifo reading
@@ -296,8 +316,6 @@ initial begin
   out_scan_file = $fscanf(out_file,"%s", answer); 
 
   error = 0;
-
-
 
   $display("############ Verification Start during accumulation #############"); 
 
@@ -368,9 +386,10 @@ always @ (posedge clk) begin
    D_xmem_q   <= D_xmem;
    CEN_xmem_q <= CEN_xmem;
    WEN_xmem_q <= WEN_xmem;
-   A_pmem_q   <= A_pmem;
+   A_pmem   <= A_pmem;
    CEN_pmem_q <= CEN_pmem;
    WEN_pmem_q <= WEN_pmem;
+   REN_pmem_q <= REN_pmem;
    A_xmem_q   <= A_xmem;
    ofifo_rd_q <= ofifo_rd;
    acc_q      <= acc;
@@ -380,6 +399,7 @@ always @ (posedge clk) begin
    l0_wr_q    <= l0_wr ;
    execute_q  <= execute;
    load_q     <= load;
+   sfu_passthrough_q <= sfu_passthrough;
 end
 
 
