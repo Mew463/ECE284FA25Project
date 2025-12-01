@@ -221,7 +221,7 @@ initial begin
       #0.5 clk = 1'b0; load = 1;
       #0.5 clk = 1'b1;  
     end
-    #0.5 clk = 1'b0; #0.5 clk = 1'b1;
+    // #0.5 clk = 1'b0; #0.5 clk = 1'b1;
 
     ////// provide some intermission to clear up the kernel loading ///
     #0.5 clk = 1'b0;  l0_rd = 0; load = 0; 
@@ -255,7 +255,7 @@ initial begin
 
     for (t=0; t<len_nij + col + row; t=t+1) begin  // 36 + 8 = 44, 
       #0.5 clk = 1'b0; 
-      if(t<len_nij + col) begin
+      if(t<len_nij + col + 1) begin
 
         A_xmem = A_xmem + 1; // Increment for SRAM -> L0
         l0_rd = 1; execute = 1; // L0 -> PE  
