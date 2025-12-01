@@ -247,7 +247,7 @@ initial begin
     A_xmem = 0; // Starting at address 0 the activations are loaded
     //preload one activation into L0
     #0.5 clk = 1'b0; 
-    l0_wr = 1;
+    l0_wr = 1; l0_rd = 1;
     WEN_xmem = 1; CEN_xmem = 0;
     #0.5 clk = 1'b1; 
     //A_xmem = A_xmem + 1; // Increment read address
