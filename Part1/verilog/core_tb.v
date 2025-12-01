@@ -215,13 +215,11 @@ initial begin
 
     /////// Kernel loading to PEs ///////
     // L0 pass the weights to PE
-    l0_rd = 1; #0.5 clk = 1'b0; #0.5 clk = 1'b1; //Need one cycle for L0 to propogate signal to first column
+    #0.5 clk = 1'b0; #0.5 clk = 1'b1; //Need one cycle for L0 to propogate signal to first column
     for (t=0; t< col + row; t=t+1) begin // Takes 8 + 8 cycles for weights to propagate
-      #0.5 clk = 1'b0; load = 1;
+      #0.5 clk = 1'b0; l0_rd = 1; load = 1;
       #0.5 clk = 1'b1;  
     end
-    #0.5 clk = 1'b0;  l0_rd = 0; load = 0;
-    #0.5 clk = 1'b1; 
 
     ////// provide some intermission to clear up the kernel loading ///
     #0.5 clk = 1'b0;  l0_rd = 0; load = 0; 
