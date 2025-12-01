@@ -250,12 +250,11 @@ initial begin
     l0_wr = 1;
     WEN_xmem = 1; CEN_xmem = 0;
     #0.5 clk = 1'b1; 
-    #0.5 clk = 1'b0; 
     //A_xmem = A_xmem + 1; // Increment read address
 
     for (t=0; t<len_nij + col + row; t=t+1) begin  // 36 + 8 = 44, 
       #0.5 clk = 1'b0; 
-      if(t<len_nij + col + 1) begin
+      if(t<len_nij) begin
 
         A_xmem = A_xmem + 1; // Increment for SRAM -> L0
         l0_rd = 1; execute = 1; // L0 -> PE  
