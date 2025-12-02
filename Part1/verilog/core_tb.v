@@ -112,6 +112,8 @@ function [31:0] onij;
     integer nijx, nijy, kijx, kijy, dx, dy, onijx, onijy;
 
     begin
+        nijx = nij % 4;
+        nijy = nij / 4;
         kijx = kij % 3;
         kijy = kij / 3;
         dx = 1 - kijx;
