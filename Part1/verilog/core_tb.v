@@ -369,7 +369,7 @@ initial begin
           // Last `t` before goes all X: all start at 18
           // 0: 52, 1-2: 34, 3-5: 35; 6-8: 36
           $timeformat(-9, 2, " ns", 20); // Unit in ns (-9), 2 decimal places, " ns" suffix, field width 20 
-          $display("kij = %d, sfpout: %16b sfpout: %d time: %t", kij, sfp_out[15:0],sfp_out[15:0], $time);
+          $display("kij = %d, sfpout: %16b sfpout: %d time: %t", kij, sfp_out[15:0], $signed(sfp_out[15:0]), $time);
         end
         // $timeformat(-9, 2, " ns", 20); // Unit in ns (-9), 2 decimal places, " ns" suffix, field width 20 
         // $display("t: %d, kij = %d, sfpout: %16b sfpout: %d time: %t", t, kij, sfp_out[15:0],sfp_out[15:0], $time);          
