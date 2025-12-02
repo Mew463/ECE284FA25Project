@@ -87,6 +87,8 @@ assign inst_q[1]   = execute_q;
 assign inst_q[0]   = load_q; 
 
 integer skippedFirst;
+integer o_nij_index;
+integer nij;
 
 core  #(.bw(bw), .col(col), .row(row)) core_instance (
 	.clk(clk), 
@@ -104,8 +106,23 @@ initial begin
   // $finish;
 end 
 
+function [31:0] onij;
+    input [31:0] nij;
+    input [31:0] kij;
+    integer nijx, nijy, kijx, kijy, dx, dy, onijx, onijy;
+
+    begin
+        kijx = kij % 3;
+        kijy = kij / 3;
+        dx = 1 - kijx;
+        dy = 1 - kijy;
+        onijx = nijx + dx;
+        onijy = nijy + dy;
+        onij = (onijx-1) + (onijy-1) * 4;
+    end
+endfunction
+
 initial begin 
-  
   acc      = 0; //totally making this up with accumulate
   D_xmem   = 0;
   CEN_xmem = 1;
@@ -262,8 +279,8 @@ initial begin
     l0_wr = 1; l0_rd = 1;
     WEN_xmem = 1; CEN_xmem = 0;
     #0.5 clk = 1'b1; 
-    //A_xmem = A_xmem + 1; // Increment read address
     skippedFirst = 0;
+    nij = -1;
     for (t=0; t<len_nij + col + row + 1; t=t+1) begin  // 36 + 8 = 44, 
       #0.5 clk = 1'b0; 
       if(t<len_nij) begin
@@ -280,34 +297,32 @@ initial begin
       if (ofifo_valid) begin // read a complete row from OFIFO
         CEN_pmem = 0; // Activate PMEM
         ofifo_rd = 1;
+        nij = nij + 1;
+        o_nij_index = onij(nij, kij);
+
         if (kij == 0) begin  
           sfu_passthrough = 1; // make SFU pass first KIJ index; ofifo goes to psum sram
           acc = 0;
-          if (skippedFirst == 0) begin
-            skippedFirst = 1;
-          end else begin
-            WEN_pmem = 1; // Write to last APMEM (delayed by one clock cycle via register)
-          end
-          A_pmem = A_pmem + 1;
         end else begin
           sfu_passthrough = 0;
           acc = 1;
-          A_pmem = A_pmem + 1;
-
-          if (skippedFirst == 0) begin
-            skippedFirst = 1;
-          end else begin
-            WEN_pmem = 1; // Write to last APMEM (delayed by one clock cycle via register)
-          end
         end
+        
+        if(o_nij_index > 0 && o_nij_index <= 15) begin // STRICTLY GREATER THAN ZERO for write timing
+          WEN_pmem = 1; // Write to last APMEM (delayed by one clock cycle via register)
+          A_pmem = o_nij_index;
+        end else begin
+          CEN_pmem = 1;
+        end
+          
       end
 
         #0.5 clk = 1'b1; 
     end
 
-    #0.5 clk = 1'b0;
     $timeformat(-9, 2, " ns", 20); // Unit in ns (-9), 2 decimal places, " ns" suffix, field width 20 
     $display("kij = %d, sfpout: %16b sfpout: %d time: %t", kij, sfp_out[15:0],sfp_out[15:0], $time);
+    #0.5 clk = 1'b0;
     CEN_xmem = 1; // Disable SRAM weights/activation
     CEN_pmem = 1; // Disable SRAM psum 
     WEN_pmem = 0;
