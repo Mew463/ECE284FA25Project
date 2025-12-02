@@ -34,7 +34,7 @@ module sram_32b_w2048_read_write (CLK, D, Q, CEN, WEN, REN, A);
   //     add_q_prev <= add_q;
   //  end
 
-   if (!CEN_buf && WEN) begin // write
+   if (!CEN_q && WEN) begin // write
       memory[add_q] <= D; 
    end
   end
