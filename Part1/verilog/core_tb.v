@@ -152,7 +152,7 @@ function [31:0] onij;
         dy = -kijy;
         onijx = nijx + dx;
         onijy = nijy + dy;
-        onij = (onijx < 4 && onijy < 4) ? onijx + onijy * 4 : -1;
+        onij = (-1 < onijx && onijx < 4 && -1 < onijy && onijy < 4) ? onijx + onijy * 4 : -1;
     end
 endfunction
 
