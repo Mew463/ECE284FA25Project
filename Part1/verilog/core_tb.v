@@ -165,16 +165,16 @@ function [31:0] onij;
 endfunction
 
 /* ALPHA: Formal Intensive Verification */
-task calculateCNN; 
-  input [bw*row-1:0] input_act_mem [0:len_kij-1];
-  input [bw*row-1:0] input_wgt_mem [0:len_kij-1];
+// task calculateCNN; 
+//   input [bw*row-1:0] input_act_mem [0:len_kij-1];
+//   input [bw*row-1:0] input_wgt_mem [0:len_kij-1];
 
-  output [psum_bw*col-1:0] golden_output;
+//   output [psum_bw*col-1:0] golden_output;
 
-  reg [psum_bw-1:0] temp_psum [0:col-1];
-  integer act_idx;
-  integer wgt_idx;
-endtask
+//   reg [psum_bw-1:0] temp_psum [0:col-1];
+//   integer act_idx;
+//   integer wgt_idx;
+// endtask
 
 
 initial begin 
@@ -433,12 +433,11 @@ initial begin
   // RIGHT NOW, THE ADDRESS BUFFERING IS WEIRD AS SHIT. WILL SHIFT DELAY TO THE OFIFO IDEALLY.
   #0.5 clk = 1'b0; 
   #0.5 clk = 1'b1; 
+  #0.5 clk = 1'b0; 
   for (i=0; i<len_onij; i=i+1) begin 
-
-    #0.5 clk = 1'b0; 
     CEN_pmem = 0;
     A_pmem = i;
-    #0.5 clk = 1'b1; 
+    #0.5 clk = 1'b1; #0.5 clk = 1'b0; 
     out_scan_file = $fscanf(out_file,"%128b", answer); // reading from out file to answer
     if (sfp_out == answer)
       $display("%2d-th output featuremap Data matched! :D", i); 

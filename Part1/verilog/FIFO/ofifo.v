@@ -32,7 +32,7 @@ module ofifo (clk, in, out, rd, wr, o_full, reset, o_ready, o_valid);
     .rd_clk(clk),
     .wr_clk(clk),
     // .rd(rd),
-    .rd(rd_en_buf),
+    .rd(rd_en),
     .wr(wr[i]),
     .o_empty(empty[i]),
     .o_full(full[i]),
