@@ -309,7 +309,7 @@ initial begin
           acc = 1;
         end
         
-        if(o_nij_index >= 0 && o_nij_index <= 15) begin 
+        if(o_nij_index >= 0 && o_nij_index <= 16) begin 
           if (o_nij_index > 1) begin 
             WEN_pmem = 1; // Write to last APMEM (delay write by one clock cycle via register)
           end
