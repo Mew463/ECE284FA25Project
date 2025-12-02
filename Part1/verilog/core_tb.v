@@ -324,10 +324,7 @@ initial begin
           $display("kij = %d, sfpout: %16b sfpout: %d time: %t", kij, sfp_out[15:0],sfp_out[15:0], $time);
         end
         // $timeformat(-9, 2, " ns", 20); // Unit in ns (-9), 2 decimal places, " ns" suffix, field width 20 
-        // $display("t: %d, kij = %d, sfpout: %16b sfpout: %d time: %t", t, kij, sfp_out[15:0],sfp_out[15:0], $time);
-
-
-          
+        // $display("t: %d, kij = %d, sfpout: %16b sfpout: %d time: %t", t, kij, sfp_out[15:0],sfp_out[15:0], $time);          
       end
 
         #0.5 clk = 1'b1; 
@@ -423,7 +420,7 @@ initial begin
 end
 
 
-always @ (posedge clk) begin
+always @ (negedge clk) begin
    D_xmem_q   <= D_xmem;
    CEN_xmem_q <= CEN_xmem;
    WEN_xmem_q <= WEN_xmem;
