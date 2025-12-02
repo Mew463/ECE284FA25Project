@@ -317,10 +317,14 @@ initial begin
         end else begin
           CEN_pmem = 1;
         end 
-        if(t == 3)begin
-            $timeformat(-9, 2, " ns", 20); // Unit in ns (-9), 2 decimal places, " ns" suffix, field width 20 
-            $display("kij = %d, sfpout: %16b sfpout: %d time: %t", kij, sfp_out[15:0],sfp_out[15:0], $time);
+        if (t == 34)begin 
+          // Last `t` before goes all X: all start at 18
+          // 0: 52, 1-2: 34, 3-5: 35; 6-8: 36
+          $timeformat(-9, 2, " ns", 20); // Unit in ns (-9), 2 decimal places, " ns" suffix, field width 20 
+          $display("kij = %d, sfpout: %16b sfpout: %d time: %t", kij, sfp_out[15:0],sfp_out[15:0], $time);
         end
+        // $timeformat(-9, 2, " ns", 20); // Unit in ns (-9), 2 decimal places, " ns" suffix, field width 20 
+        // $display("t: %d, kij = %d, sfpout: %16b sfpout: %d time: %t", t, kij, sfp_out[15:0],sfp_out[15:0], $time);
 
 
           
@@ -330,8 +334,9 @@ initial begin
     end
     #0.5 clk = 1'b0;
     CEN_xmem = 1; // Disable SRAM weights/activation
-    CEN_pmem = 0; // Disable SRAM psum 
+    CEN_pmem = 1; // Disable SRAM psum 
     WEN_pmem = 0;
+    acc = 0;
     l0_wr = 0; // Disable L0 writing
     l0_rd = 0; execute = 0; // Disable L0 and PE execute
     ofifo_rd = 0; // Disable ofifo reading
