@@ -19,7 +19,13 @@ module sram_32b_w2048_read_write (CLK, D, Q, CEN, WEN, REN, A);
   assign Q = memory[add_q];
 
 
+
+
   always @ (posedge CLK) begin
+
+    //DEBUG:
+    // memory [16] <= 0;
+
 
    if (!CEN) begin // read  
       add_q <= A;

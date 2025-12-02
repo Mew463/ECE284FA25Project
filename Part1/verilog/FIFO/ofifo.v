@@ -44,13 +44,9 @@ module ofifo (clk, in, out, rd, wr, o_full, reset, o_ready, o_valid);
       rd_en <= 0;
    end
    else begin
-    if (rd) begin
-      rd_en <= 0;
-    end else begin 
-      rd_en <= 1;
+    rd_en <= rd;
     end
    end
-  end
 
 
 endmodule

@@ -144,15 +144,15 @@ function [31:0] onij;
     integer nijx, nijy, kijx, kijy, dx, dy, onijx, onijy;
 
     begin
-        nijx = nij % 4;
-        nijy = nij / 4;
+        nijx = nij % 6;
+        nijy = nij / 6;
         kijx = kij % 3;
         kijy = kij / 3;
-        dx = 1 - kijx;
-        dy = 1 - kijy;
+        dx = -kijx;
+        dy = -kijy;
         onijx = nijx + dx;
         onijy = nijy + dy;
-        onij = (onijx-1) + (onijy-1) * 4;
+        onij = (onijx < 4 && onijy < 4) ? onijx + onijy * 4 : -1;
     end
 endfunction
 
@@ -306,10 +306,10 @@ initial begin
     4) Repeat
     5) Store output in PSUM SRAM
     */
-    A_xmem = 0; // Starting at address 0 the activations are loaded
-    A_pmem = 0;
     //preload one activation into L0
     #0.5 clk = 1'b0; 
+    A_xmem = 0; // Starting at address 0 the activations are loaded
+    A_pmem = 0;
     l0_wr = 1; l0_rd = 1;
     WEN_xmem = 1; CEN_xmem = 0;
     #0.5 clk = 1'b1; 
@@ -342,8 +342,8 @@ initial begin
           acc = 1;
         end
         
-        if(o_nij_index >= 0 && o_nij_index <= 16+1) begin 
-          if (o_nij_index > 1) begin 
+        if(o_nij_index >= 0 && o_nij_index < 16) begin 
+          if (o_nij_index > 0) begin 
             WEN_pmem = 1; // Write to last APMEM (delay write by one clock cycle via register)
           end
           A_pmem = o_nij_index;
