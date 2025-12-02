@@ -27,14 +27,14 @@ assign a_q2 = a_q[3:2];
 assign a_q1 = a_q[1:0];
 
 wire signed [psum_bw-1:0] mac1_out, mac2_out; 
-mac #(.bw(bw), .psum_bw(psum_bw)) mac_instance2 (
+mac #(.bw(bw), .psum_bw(psum_bw)) mac_instance2 ( // MSB
     .a({{2'b00},{a_q2}}), 
     .b(b_q2),
     .c({(psum_bw){1'b0}}),
 	.out(mac2_out)
 ); 
 
-mac #(.bw(bw), .psum_bw(psum_bw)) mac_instance1 (
+mac #(.bw(bw), .psum_bw(psum_bw)) mac_instance1 ( // Handles LSB
     .a({{2'b00},{a_q1}}), 
     .b(b_q1),
     .c({(psum_bw){1'b0}}),
@@ -82,6 +82,5 @@ always @(posedge clk) begin
 end
 assign out_e = a_q;
 assign inst_e = inst_q;
-assign out_s = separateweights ? mac1_out + mac2_out + c_q: (mac1_out << 2) + mac2_out + c_q;
-
+assign out_s = separateweights ? mac1_out + mac2_out + c_q : (mac2_out <<< 2) + mac1_out + c_q;
 endmodule
