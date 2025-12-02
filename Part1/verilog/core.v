@@ -21,6 +21,7 @@ module core(clk, inst, ofifo_valid, D_xmem, sfp_out, reset);
     wire  [psum_bw*col-1:0] out_s;
 
     // Expand the instruction bus from the core_tb
+    wire debug = inst[63];
     wire REN_pmem = inst[35];
     wire passthrough = inst[34];
     wire acc        = inst[33];
@@ -121,6 +122,9 @@ module core(clk, inst, ofifo_valid, D_xmem, sfp_out, reset);
         end
         else begin
             sram_in_reg <= sram_in;
+            // if (debug) begin
+            //     for 
+            // end
         end
         // /*Z
         // *****************************************************************

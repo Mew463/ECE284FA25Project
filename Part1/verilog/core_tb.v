@@ -43,6 +43,7 @@ reg sfu_passthrough_q = 0;
 reg sfu_passthrough;
 reg REN_pmem_q = 0;
 reg REN_pmem;
+reg debug = 0;
 
 reg [bw*row-1:0] D_xmem;
 reg [psum_bw*col-1:0] answer;
@@ -85,7 +86,7 @@ integer error;
 // assign inst_q[2]   = l0_wr_q;
 // assign inst_q[1]   = execute_q; 
 // assign inst_q[0]   = load_q; 
-
+assign inst_q[63] = debug; // Debug signal for psum_sram
 assign inst_q[35] = REN_pmem;
 assign inst_q[34] = sfu_passthrough;
 assign inst_q[33] = acc;
@@ -118,7 +119,8 @@ core  #(.bw(bw), .col(col), .row(row)) core_instance (
 initial begin
   $dumpfile("core_tb.vcd");
   $dumpvars(0,core_tb);
-  #10;
+  // dump JUST the memory explicitly
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[0]); 
   // $finish;
 end 
 
