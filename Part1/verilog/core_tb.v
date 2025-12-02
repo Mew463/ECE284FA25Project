@@ -355,7 +355,7 @@ initial begin
     #0.5 clk = 1'b1; 
     skippedFirst = 0;
     nij = -1;
-    for (t=0; t<len_nij + col + row + 1; t=t+1) begin  // 36 + 8 + 8 = 52
+    for (t=0; t<len_nij + col + row; t=t+1) begin  // 36 + 8 + 8 = 52
       #0.5 clk = 1'b0; 
       if(t<len_nij) begin
 
