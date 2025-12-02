@@ -22,6 +22,7 @@ module core(clk, inst, ofifo_valid, D_xmem, sfp_out, reset);
 
     // Expand the instruction bus from the core_tb
     wire debug = inst[63];
+    // wire[1:0] actFunc = inst_q[37:36];
     wire REN_pmem = inst[35];
     wire passthrough = inst[34];
     wire acc        = inst[33];
@@ -42,6 +43,7 @@ module core(clk, inst, ofifo_valid, D_xmem, sfp_out, reset);
 
     wire [psum_bw*col-1:0] sram_l0_bridge; 
     wire [row*bw-1:0] l0_mac_bridge;
+    reg ofifo_rd_buf; // buffer the ofifo read signal, seeing if fixes timing issue
 
     wire ofifo_full, ofifo_ready, ofifo_valid;
     wire [col-1:0] mac_ofifo_valid_bridge;
@@ -108,6 +110,7 @@ module core(clk, inst, ofifo_valid, D_xmem, sfp_out, reset);
             .psum_in(sram_out[psum_bw*sfp_i - 1: psum_bw*(sfp_i-1)]),
             .ofifo_in(ofifo_out[psum_bw*sfp_i - 1: psum_bw*(sfp_i-1)]),
             .accum(acc),
+            // .actFunc(actFunc),
             .sfp_out(sram_in[psum_bw*sfp_i - 1: psum_bw*(sfp_i-1)]),
             .passthrough(passthrough)
         );
@@ -122,6 +125,7 @@ module core(clk, inst, ofifo_valid, D_xmem, sfp_out, reset);
         end
         else begin
             sram_in_reg <= sram_in;
+            ofifo_rd_buf <= ofifo_rd; // buffer the ofifo read signal, seeing if fixes timing issue
             // if (debug) begin
             //     for 
             // end

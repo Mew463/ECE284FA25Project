@@ -43,6 +43,8 @@ reg sfu_passthrough_q = 0;
 reg sfu_passthrough;
 reg REN_pmem_q = 0;
 reg REN_pmem;
+// reg [1:0] actFunc_q = 0;
+// reg [1:0] actFunc;
 reg debug = 0;
 
 reg [bw*row-1:0] D_xmem;
@@ -87,6 +89,7 @@ integer error;
 // assign inst_q[1]   = execute_q; 
 // assign inst_q[0]   = load_q; 
 assign inst_q[63] = debug; // Debug signal for psum_sram
+// assign inst_q[37:36] = actFunc;
 assign inst_q[35] = REN_pmem;
 assign inst_q[34] = sfu_passthrough;
 assign inst_q[33] = acc;
@@ -417,7 +420,7 @@ initial begin
       $display("%2d-th output featuremap Data ERROR!!", i); 
       $display("sfpout: %128b", sfp_out);
       $display("answer: %128b", answer);
-      error = 1;
+      error = error + 1;
     end
    
  
@@ -452,6 +455,9 @@ initial begin
   	$display("############ No error detected ##############"); 
   	$display("########### Project Completed !! ############"); 
 
+  end
+  else begin
+    $display("############ %d errors detected. ############", error);
   end
 
   // $fclose(acc_file);
