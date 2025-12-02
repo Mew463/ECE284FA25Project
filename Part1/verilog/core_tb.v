@@ -207,6 +207,7 @@ initial begin
   /////// Activation data writing to memory ///////
   for (t=0; t<len_nij; t=t+1) begin  
     #0.5 clk = 1'b0;  x_scan_file = $fscanf(x_file,"%32b", D_xmem); // Load the activations (inputs) into core.v
+    /* ALPHA: D_xmem = $unsigned($random) // Loads arbitrary 32 bitstream */
     WEN_xmem = 0; CEN_xmem = 0; 
     if (t>0) A_xmem = A_xmem + 1;
     #0.5 clk = 1'b1;   
@@ -405,7 +406,7 @@ initial begin
   error = 0;
 
   $display("############ Verification Start during accumulation #############"); 
-  // 
+  // RIGHT NOW, THE ADDRESS BUFFERING IS WEIRD AS SHIT. WILL SHIFT DELAY TO THE OFIFO IDEALLY.
   CEN_pmem = 0;
   A_pmem = 0; #0.5 clk = 1'b0; #0.5 clk = 1'b1; 
   A_pmem = 1; #0.5 clk = 1'b0; #0.5 clk = 1'b1; 
