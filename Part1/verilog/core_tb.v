@@ -69,22 +69,39 @@ integer captured_data;
 integer t, i, j, k, kij, a;
 integer error;
 
-assign inst_q[35] = REN_pmem_q;
-assign inst_q[34] = sfu_passthrough_q;
-assign inst_q[33] = acc_q;
-assign inst_q[32] = CEN_pmem_q;
-assign inst_q[31] = WEN_pmem_q;
-assign inst_q[30:20] = A_pmem_q;
-assign inst_q[19]   = CEN_xmem_q;
-assign inst_q[18]   = WEN_xmem_q;
-assign inst_q[17:7] = A_xmem_q;
-assign inst_q[6]   = ofifo_rd_q;
-assign inst_q[5]   = ififo_wr_q;
-assign inst_q[4]   = ififo_rd_q;
-assign inst_q[3]   = l0_rd_q;
-assign inst_q[2]   = l0_wr_q;
-assign inst_q[1]   = execute_q; 
-assign inst_q[0]   = load_q; 
+// assign inst_q[35] = REN_pmem_q;
+// assign inst_q[34] = sfu_passthrough_q;
+// assign inst_q[33] = acc_q;
+// assign inst_q[32] = CEN_pmem_q;
+// assign inst_q[31] = WEN_pmem_q;
+// assign inst_q[30:20] = A_pmem_q;
+// assign inst_q[19]   = CEN_xmem_q;
+// assign inst_q[18]   = WEN_xmem_q;
+// assign inst_q[17:7] = A_xmem_q;
+// assign inst_q[6]   = ofifo_rd_q;
+// assign inst_q[5]   = ififo_wr_q;
+// assign inst_q[4]   = ififo_rd_q;
+// assign inst_q[3]   = l0_rd_q;
+// assign inst_q[2]   = l0_wr_q;
+// assign inst_q[1]   = execute_q; 
+// assign inst_q[0]   = load_q; 
+
+assign inst_q[35] = REN_pmem;
+assign inst_q[34] = sfu_passthrough;
+assign inst_q[33] = acc;
+assign inst_q[32] = CEN_pmem;
+assign inst_q[31] = WEN_pmem;
+assign inst_q[30:20] = A_pmem;
+assign inst_q[19]   = CEN_xmem;
+assign inst_q[18]   = WEN_xmem;
+assign inst_q[17:7] = A_xmem;
+assign inst_q[6]   = ofifo_rd;
+assign inst_q[5]   = ififo_wr;
+assign inst_q[4]   = ififo_rd;
+assign inst_q[3]   = l0_rd;
+assign inst_q[2]   = l0_wr;
+assign inst_q[1]   = execute; 
+assign inst_q[0]   = load; 
 
 integer skippedFirst;
 integer o_nij_index;
@@ -94,7 +111,7 @@ core  #(.bw(bw), .col(col), .row(row)) core_instance (
 	.clk(clk), 
 	.inst(inst_q),
 	.ofifo_valid(ofifo_valid),
-  .D_xmem(D_xmem_q), 
+  .D_xmem(D_xmem), 
   .sfp_out(sfp_out), 
 	.reset(reset)); 
 
@@ -420,25 +437,25 @@ initial begin
 end
 
 
-always @ (negedge clk) begin
-   D_xmem_q   <= D_xmem;
-   CEN_xmem_q <= CEN_xmem;
-   WEN_xmem_q <= WEN_xmem;
-   A_pmem_q   <= A_pmem;
-   CEN_pmem_q <= CEN_pmem;
-   WEN_pmem_q <= WEN_pmem;
-   REN_pmem_q <= REN_pmem;
-   A_xmem_q   <= A_xmem;
-   ofifo_rd_q <= ofifo_rd;
-   acc_q      <= acc;
-   ififo_wr_q <= ififo_wr;
-   ififo_rd_q <= ififo_rd;
-   l0_rd_q    <= l0_rd;
-   l0_wr_q    <= l0_wr ;
-   execute_q  <= execute;
-   load_q     <= load;
-   sfu_passthrough_q <= sfu_passthrough;
-end
+// always @ (posedge clk) begin
+//    D_xmem_q   <= D_xmem;
+//    CEN_xmem_q <= CEN_xmem;
+//    WEN_xmem_q <= WEN_xmem;
+//    A_pmem_q   <= A_pmem;
+//    CEN_pmem_q <= CEN_pmem;
+//    WEN_pmem_q <= WEN_pmem;
+//    REN_pmem_q <= REN_pmem;
+//    A_xmem_q   <= A_xmem;
+//    ofifo_rd_q <= ofifo_rd;
+//    acc_q      <= acc;
+//    ififo_wr_q <= ififo_wr;
+//    ififo_rd_q <= ififo_rd;
+//    l0_rd_q    <= l0_rd;
+//    l0_wr_q    <= l0_wr ;
+//    execute_q  <= execute;
+//    load_q     <= load;
+//    sfu_passthrough_q <= sfu_passthrough;
+// end
 
 
 endmodule
