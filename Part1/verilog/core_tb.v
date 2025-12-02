@@ -217,16 +217,27 @@ initial begin
 
   for (kij=0; kij<9; kij=kij+1) begin    // kij loop
 
+    // case(kij)
+    //  0: w_file_name = "weight_itile0_otile0_kij0.txt";
+    //  1: w_file_name = "weight_itile0_otile0_kij1.txt";
+    //  2: w_file_name = "weight_itile0_otile0_kij2.txt";
+    //  3: w_file_name = "weight_itile0_otile0_kij3.txt";
+    //  4: w_file_name = "weight_itile0_otile0_kij4.txt";
+    //  5: w_file_name = "weight_itile0_otile0_kij5.txt";
+    //  6: w_file_name = "weight_itile0_otile0_kij6.txt";
+    //  7: w_file_name = "weight_itile0_otile0_kij7.txt";
+    //  8: w_file_name = "weight_itile0_otile0_kij8.txt";
+    // endcase
     case(kij)
-     0: w_file_name = "weight_itile0_otile0_kij0.txt";
-     1: w_file_name = "weight_itile0_otile0_kij1.txt";
-     2: w_file_name = "weight_itile0_otile0_kij2.txt";
-     3: w_file_name = "weight_itile0_otile0_kij3.txt";
-     4: w_file_name = "weight_itile0_otile0_kij4.txt";
-     5: w_file_name = "weight_itile0_otile0_kij5.txt";
-     6: w_file_name = "weight_itile0_otile0_kij6.txt";
-     7: w_file_name = "weight_itile0_otile0_kij7.txt";
-     8: w_file_name = "weight_itile0_otile0_kij8.txt";
+     0: w_file_name = "weight0.txt";
+     1: w_file_name = "weight1.txt";
+     2: w_file_name = "weight2.txt";
+     3: w_file_name = "weight3.txt";
+     4: w_file_name = "weight4.txt";
+     5: w_file_name = "weight5.txt";
+     6: w_file_name = "weight6.txt";
+     7: w_file_name = "weight7.txt";
+     8: w_file_name = "weight8.txt";
     endcase
     
 
@@ -363,6 +374,7 @@ initial begin
         #0.5 clk = 1'b1; 
     end
     #0.5 clk = 1'b0;
+    #0.5 clk = 1'b1; #0.5 clk = 1'b0; #0.5 clk = 1'b1; #0.5 clk = 1'b0; //TWO CLOCK CYCLES TO HIT THE LAST NIJ VALUES
     CEN_xmem = 1; // Disable SRAM weights/activation
     CEN_pmem = 1; // Disable SRAM psum 
     WEN_pmem = 0;
