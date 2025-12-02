@@ -101,7 +101,6 @@ core  #(.bw(bw), .col(col), .row(row)) core_instance (
 initial begin
   $dumpfile("core_tb.vcd");
   $dumpvars(0,core_tb);
-  $display("TB STILL RUNNING");
   #10;
   // $finish;
 end 
@@ -283,7 +282,7 @@ initial begin
     #0.5 clk = 1'b1; 
     skippedFirst = 0;
     nij = -1;
-    for (t=0; t<len_nij + col + row + 1; t=t+1) begin  // 36 + 8 = 44, 
+    for (t=0; t<len_nij + col + row + 1; t=t+1) begin  // 36 + 8 + 8 = 52
       #0.5 clk = 1'b0; 
       if(t<len_nij) begin
 
@@ -310,28 +309,35 @@ initial begin
           acc = 1;
         end
         
-        if(o_nij_index > 0 && o_nij_index <= 15) begin // STRICTLY GREATER THAN ZERO for write timing
-          WEN_pmem = 1; // Write to last APMEM (delayed by one clock cycle via register)
+        if(o_nij_index >= 0 && o_nij_index <= 15) begin 
+          if (o_nij_index > 1) begin 
+            WEN_pmem = 1; // Write to last APMEM (delay write by one clock cycle via register)
+          end
           A_pmem = o_nij_index;
         end else begin
           CEN_pmem = 1;
+        end 
+        if(t == 3)begin
+            $timeformat(-9, 2, " ns", 20); // Unit in ns (-9), 2 decimal places, " ns" suffix, field width 20 
+            $display("kij = %d, sfpout: %16b sfpout: %d time: %t", kij, sfp_out[15:0],sfp_out[15:0], $time);
         end
+
+
           
       end
 
         #0.5 clk = 1'b1; 
     end
-
-    $timeformat(-9, 2, " ns", 20); // Unit in ns (-9), 2 decimal places, " ns" suffix, field width 20 
-    $display("kij = %d, sfpout: %16b sfpout: %d time: %t", kij, sfp_out[15:0],sfp_out[15:0], $time);
     #0.5 clk = 1'b0;
     CEN_xmem = 1; // Disable SRAM weights/activation
-    CEN_pmem = 1; // Disable SRAM psum 
+    CEN_pmem = 0; // Disable SRAM psum 
     WEN_pmem = 0;
     l0_wr = 0; // Disable L0 writing
     l0_rd = 0; execute = 0; // Disable L0 and PE execute
     ofifo_rd = 0; // Disable ofifo reading
-    #0.5 clk = 1'b1;
+    #0.5 clk = 1'b1; #0.5 clk = 1'b0; #0.5 clk = 1'b1;
+    // $timeformat(-9, 2, " ns", 20); // Unit in ns (-9), 2 decimal places, " ns" suffix, field width 20 
+    // $display("kij = %d, sfpout: %16b sfpout: %d time: %t", kij, sfp_out[15:0],sfp_out[15:0], $time);
     /////////////////////////////////////
 
   end  // end of kij loop
@@ -352,45 +358,45 @@ initial begin
   for (i=0; i<len_onij+1; i=i+1) begin 
 
     #0.5 clk = 1'b0; 
+    CEN_pmem = 0;
+    WEN_pmem = 0;
+    A_pmem = i;
     #0.5 clk = 1'b1; 
-
-    // if (i>0) begin
-    //  out_scan_file = $fscanf(out_file,"%128b", answer); // reading from out file to answer
-    //    if (sfp_out == answer)
-    //      $display("%2d-th output featuremap Data matched! :D", i); 
-    //    else begin
-    //      $display("%2d-th output featuremap Data ERROR!!", i); 
-    //      $display("sfpout: %128b", sfp_out);
-    //      $display("answer: %128b", answer);
-    //      error = 1;
-    //    end
-    // end
+    out_scan_file = $fscanf(out_file,"%128b", answer); // reading from out file to answer
+    if (sfp_out == answer)
+      $display("%2d-th output featuremap Data matched! :D", i); 
+    else begin
+      $display("%2d-th output featuremap Data ERROR!!", i); 
+      $display("sfpout: %128b", sfp_out);
+      $display("answer: %128b", answer);
+      error = 1;
+    end
    
  
-    #0.5 clk = 1'b0; reset = 1;
-    #0.5 clk = 1'b1;  
-    #0.5 clk = 1'b0; reset = 0; 
-    #0.5 clk = 1'b1;  
+    // #0.5 clk = 1'b0; reset = 1;
+    // #0.5 clk = 1'b1;  
+    // #0.5 clk = 1'b0; reset = 0; 
+    // #0.5 clk = 1'b1;  
     
-    acc_file = $fopen("activation_tile0.txt", "r");
+    // acc_file = $fopen("activation_tile0.txt", "r");
 
-      // Following three lines are to remove the first three comment lines of the file
-      out_scan_file = $fscanf(out_file,"%s", answer); 
-      out_scan_file = $fscanf(out_file,"%s", answer); 
-      out_scan_file = $fscanf(out_file,"%s", answer); 
+    //   // Following three lines are to remove the first three comment lines of the file
+    //   out_scan_file = $fscanf(out_file,"%s", answer); 
+    //   out_scan_file = $fscanf(out_file,"%s", answer); 
+    //   out_scan_file = $fscanf(out_file,"%s", answer); 
 
-    for (j=0; j<len_kij+1; j=j+1) begin 
+    // for (j=0; j<len_kij+1; j=j+1) begin 
 
-      #0.5 clk = 1'b0;   
-        if (j<len_kij) begin CEN_pmem = 0; WEN_pmem = 1; acc_scan_file = $fscanf(acc_file,"%11b", A_pmem); end
-                       else  begin CEN_pmem = 1; WEN_pmem = 1; end
+    //   #0.5 clk = 1'b0;   
+    //     if (j<len_kij) begin CEN_pmem = 0; WEN_pmem = 1; acc_scan_file = $fscanf(acc_file,"%11b", A_pmem); end
+    //                    else  begin CEN_pmem = 1; WEN_pmem = 1; end
 
-        if (j>0)  acc = 1;  
-      #0.5 clk = 1'b1;   
-    end
+    //     if (j>0)  acc = 1;  
+    //   #0.5 clk = 1'b1;   
+    // end
 
-    #0.5 clk = 1'b0; acc = 0;
-    #0.5 clk = 1'b1; 
+    // #0.5 clk = 1'b0; acc = 0;
+    // #0.5 clk = 1'b1; 
   end
 
 
@@ -400,7 +406,7 @@ initial begin
 
   end
 
-  $fclose(acc_file);
+  // $fclose(acc_file);
   //////////////////////////////////
 
   for (t=0; t<10; t=t+1) begin  
