@@ -405,22 +405,24 @@ initial begin
   error = 0;
 
   $display("############ Verification Start during accumulation #############"); 
-
-  for (i=0; i<len_onij; i=i+1) begin 
+  // 
+  CEN_pmem = 0;
+  A_pmem = 0; #0.5 clk = 1'b0; #0.5 clk = 1'b1; 
+  A_pmem = 1; #0.5 clk = 1'b0; #0.5 clk = 1'b1; 
+  for (i=2; i<len_onij + 2; i=i+1) begin 
 
     #0.5 clk = 1'b0; 
-    CEN_pmem = 0;
-    WEN_pmem = 0;
     A_pmem = i;
     #0.5 clk = 1'b1; 
     out_scan_file = $fscanf(out_file,"%128b", answer); // reading from out file to answer
     if (sfp_out == answer)
-      $display("%2d-th output featuremap Data matched! :D", i); 
+      $display("%2d-th output featuremap Data matched! :D", i-2); 
     else begin
-      $display("%2d-th output featuremap Data ERROR!!", i); 
+      $display("%2d-th output featuremap Data ERROR!!", i-2); 
       $display("sfpout: %128b", sfp_out);
       $display("answer: %128b", answer);
       error = error + 1;
+      
     end
    
  
