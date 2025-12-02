@@ -120,8 +120,22 @@ initial begin
   $dumpfile("core_tb.vcd");
   $dumpvars(0,core_tb);
   // dump JUST the memory explicitly
-  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[0]); 
-  // $finish;
+  $dumpvars(1, core_instance.PSUM_sram.memory[0]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[1]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[2]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[3]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[4]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[5]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[6]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[7]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[8]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[9]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[10]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[11]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[12]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[13]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[14]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[15]); 
 end 
 
 function [31:0] onij;
@@ -328,7 +342,7 @@ initial begin
           acc = 1;
         end
         
-        if(o_nij_index >= 0 && o_nij_index <= 16) begin 
+        if(o_nij_index >= 0 && o_nij_index <= 16+1) begin 
           if (o_nij_index > 1) begin 
             WEN_pmem = 1; // Write to last APMEM (delay write by one clock cycle via register)
           end
