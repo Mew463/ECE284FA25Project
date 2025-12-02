@@ -136,6 +136,7 @@ initial begin
   $dumpvars(1, core_instance.PSUM_sram.memory[13]); 
   $dumpvars(1, core_instance.PSUM_sram.memory[14]); 
   $dumpvars(1, core_instance.PSUM_sram.memory[15]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[16]);
 end 
 
 function [31:0] onij;
@@ -402,7 +403,7 @@ initial begin
 
   $display("############ Verification Start during accumulation #############"); 
 
-  for (i=0; i<len_onij+1; i=i+1) begin 
+  for (i=0; i<len_onij; i=i+1) begin 
 
     #0.5 clk = 1'b0; 
     CEN_pmem = 0;
