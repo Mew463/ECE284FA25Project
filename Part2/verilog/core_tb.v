@@ -261,7 +261,8 @@ initial begin
     psum_sram_ptr = 0;
     sfu_passthrough = 0;
 
-    x_file = $fopen("part2a_vals/activation.txt", "r");
+    // x_file = $fopen("part2a_vals/activation.txt", "r");
+    x_file = $fopen("activation_tile0_old.txt", "r");
     // Following three lines are to remove the first three comment lines of the file
     x_scan_file = $fscanf(x_file,"%s", captured_data);
     x_scan_file = $fscanf(x_file,"%s", captured_data);
@@ -305,28 +306,48 @@ initial begin
 
     if (oc_group == 0) begin
       case(kij)
-        0: w_file_name = "part2a_vals/weight_octile0_kij0.txt";
-        1: w_file_name = "part2a_vals/weight_octile0_kij1.txt";
-        2: w_file_name = "part2a_vals/weight_octile0_kij2.txt";
-        3: w_file_name = "part2a_vals/weight_octile0_kij3.txt";
-        4: w_file_name = "part2a_vals/weight_octile0_kij4.txt";
-        5: w_file_name = "part2a_vals/weight_octile0_kij5.txt";
-        6: w_file_name = "part2a_vals/weight_octile0_kij6.txt";
-        7: w_file_name = "part2a_vals/weight_octile0_kij7.txt";
-        8: w_file_name = "part2a_vals/weight_octile0_kij8.txt";
+        // 0: w_file_name = "part2a_vals/weight_octile0_kij0.txt";
+        // 1: w_file_name = "part2a_vals/weight_octile0_kij1.txt";
+        // 2: w_file_name = "part2a_vals/weight_octile0_kij2.txt";
+        // 3: w_file_name = "part2a_vals/weight_octile0_kij3.txt";
+        // 4: w_file_name = "part2a_vals/weight_octile0_kij4.txt";
+        // 5: w_file_name = "part2a_vals/weight_octile0_kij5.txt";
+        // 6: w_file_name = "part2a_vals/weight_octile0_kij6.txt";
+        // 7: w_file_name = "part2a_vals/weight_octile0_kij7.txt";
+        // 8: w_file_name = "part2a_vals/weight_octile0_kij8.txt";
+
+
+        0: w_file_name = "weight_itile0_otile0_kij0.txt";
+        1: w_file_name = "weight_itile0_otile0_kij1.txt";
+        2: w_file_name = "weight_itile0_otile0_kij2.txt";
+        3: w_file_name = "weight_itile0_otile0_kij3.txt";
+        4: w_file_name = "weight_itile0_otile0_kij4.txt";
+        5: w_file_name = "weight_itile0_otile0_kij5.txt";
+        6: w_file_name = "weight_itile0_otile0_kij6.txt";
+        7: w_file_name = "weight_itile0_otile0_kij7.txt";
+        8: w_file_name = "weight_itile0_otile0_kij8.txt";
       endcase
     end
     if (oc_group == 1) begin
       case(kij)
-        0: w_file_name = "part2a_vals/weight_octile1_kij0.txt";
-        1: w_file_name = "part2a_vals/weight_octile1_kij1.txt";
-        2: w_file_name = "part2a_vals/weight_octile1_kij2.txt";
-        3: w_file_name = "part2a_vals/weight_octile1_kij3.txt";
-        4: w_file_name = "part2a_vals/weight_octile1_kij4.txt";
-        5: w_file_name = "part2a_vals/weight_octile1_kij5.txt";
-        6: w_file_name = "part2a_vals/weight_octile1_kij6.txt";
-        7: w_file_name = "part2a_vals/weight_octile1_kij7.txt";
-        8: w_file_name = "part2a_vals/weight_octile1_kij8.txt";
+        // 0: w_file_name = "part2a_vals/weight_octile1_kij0.txt";
+        // 1: w_file_name = "part2a_vals/weight_octile1_kij1.txt";
+        // 2: w_file_name = "part2a_vals/weight_octile1_kij2.txt";
+        // 3: w_file_name = "part2a_vals/weight_octile1_kij3.txt";
+        // 4: w_file_name = "part2a_vals/weight_octile1_kij4.txt";
+        // 5: w_file_name = "part2a_vals/weight_octile1_kij5.txt";
+        // 6: w_file_name = "part2a_vals/weight_octile1_kij6.txt";
+        // 7: w_file_name = "part2a_vals/weight_octile1_kij7.txt";
+        // 8: w_file_name = "part2a_vals/weight_octile1_kij8.txt";
+        0: w_file_name = "weight_itile0_otile0_kij0.txt";
+        1: w_file_name = "weight_itile0_otile0_kij1.txt";
+        2: w_file_name = "weight_itile0_otile0_kij2.txt";
+        3: w_file_name = "weight_itile0_otile0_kij3.txt";
+        4: w_file_name = "weight_itile0_otile0_kij4.txt";
+        5: w_file_name = "weight_itile0_otile0_kij5.txt";
+        6: w_file_name = "weight_itile0_otile0_kij6.txt";
+        7: w_file_name = "weight_itile0_otile0_kij7.txt";
+        8: w_file_name = "weight_itile0_otile0_kij8.txt";
       endcase
     end
     
