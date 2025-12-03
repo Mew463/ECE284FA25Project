@@ -23,6 +23,7 @@ module core(clk, inst, ofifo_valid, D_xmem, sfp_out, reset);
     // Expand the instruction bus from the core_tb
     wire debug = inst[63];
     // wire[1:0] actFunc = inst_q[37:36];
+    wire output_stationary = inst[36];
     wire REN_pmem = inst[35];
     wire passthrough = inst[34];
     wire acc        = inst[33];
@@ -43,6 +44,8 @@ module core(clk, inst, ofifo_valid, D_xmem, sfp_out, reset);
 
     wire [psum_bw*col-1:0] sram_l0_bridge; 
     wire [row*bw-1:0] l0_mac_bridge;
+    wire [psum_bw*col-1:0] sram_l1_bridge; 
+    wire [row*bw-1:0] l1_mac_bridge;
 
     wire ofifo_full, ofifo_ready, ofifo_valid;
     wire [col-1:0] mac_ofifo_valid_bridge;
@@ -64,7 +67,7 @@ module core(clk, inst, ofifo_valid, D_xmem, sfp_out, reset);
         .out_s(out_s),
         .in_w(l0_mac_bridge),
         .in_n({psum_bw*col{1'b0}}),
-        .inst_w({execute, load}),
+        .inst_w({output_stationary, execute, load}),
         .valid(mac_ofifo_valid_bridge)
     );
 
@@ -97,6 +100,18 @@ module core(clk, inst, ofifo_valid, D_xmem, sfp_out, reset);
         .out(l0_mac_bridge),
         .rd(l0_rd),
         .wr(l0_wr),
+        .o_full(o_full),
+        .reset(reset),
+        .o_ready(o_ready),
+        .all_row_at_a_time(1'b0) // Dont use for vanilla version (or ever probably)
+    );
+
+    l0 NORTH_l0 (
+        .clk(clk),
+        .in(sram_l1_bridge[row*bw-1:0]),
+        .out(l1_mac_bridge),
+        .rd(l0_rd),
+        .wr(l1_wr),
         .o_full(o_full),
         .reset(reset),
         .o_ready(o_ready),

@@ -13,20 +13,29 @@ output [2:0] inst_e;
 input  [psum_bw-1:0] in_n;  //either weight from output_stationary or psum from weight stationary
 input  clk;
 input  reset;
+
 wire weight_stationary;
-assign weight_stationary = ~inst[2];
-reg [bw-1:0] a_q
-reg [psum_bw-1:0] b_q;
-reg [psum_bw-1:0] c_q;
-reg [1:0] inst_q;
+assign weight_stationary = !inst_w[2];
+
+reg [bw-1:0] a_q;   //activation
+reg [psum_bw-1:0] b_q;  //either the weight for weight stationary or the weight from the north for output stationary
+reg [psum_bw-1:0] c_q;  //psum
+reg [2:0] inst_q;
 reg load_ready_q;
 
-wire signed [psum_bw-1:0] mac_out; 
-mac #(.bw(bw), .psum_bw(psum_bw)) mac_instance (
+wire signed [psum_bw-1:0] mac_out0; 
+wire signed [psum_bw-1:0] mac_out1; 
+mac #(.bw(bw), .psum_bw(psum_bw)) mac_instance0 (
     .a(a_q), 
-    .b(b_q),
+    .b(b_q[bw-1:0]),
     .c(c_q),
-    .out(mac_out)
+    .out(mac_out0)
+); 
+mac #(.bw(bw), .psum_bw(psum_bw)) mac_instance1 (
+    .a(in_w), 
+    .b(in_n[bw-1:0]),
+    .c(c_q),
+    .out(mac_out1)
 ); 
 always @(posedge clk) begin
     if (reset) begin
@@ -53,24 +62,20 @@ always @(posedge clk) begin
             inst_q[0] <= inst_w[0];
         end
     end else begin  //output stationary
-        inst_q = inst_w; // Question: should the instructions be passed down no matter what? Yes? Yes.
+        inst_q <= inst_w; // Question: should the instructions be passed down no matter what? Yes? Yes.
         if(inst_w[0]) begin//inst[2] == 1: output_stationary, inst[1]:pass_psum, inst[0]: accumulate
-        a_q = in_w;
-        b_q = in_n;
+            a_q <= in_w;
+            b_q <= in_n;
+            c_q <= mac_out1;
         end
-
+        if (inst_w[1]) begin
+            c_q <= in_n;
+        end
     end 
-end
-
-//In output stationary case, we need to get mac_out into c_q before next posedge
-//(a_q and b_q will be changed at next rising edge and thus changing mac_out).
-always @ (negedge clk) begin
-    if(inst_w[0] && inst_w[2]) begin
-        c_q = mac_out
-    end
 end
 
 assign out_e = a_q;
 assign inst_e = inst_q;
-assign out_s = inst[2] ? (inst [1] ? c_q : b_q) :mac_out; // if output stationary, pass down weight. Else, pass down psum
+assign out_s = !weight_stationary ? (inst_w[1] ? c_q : b_q) : mac_out0; // if output stationary, pass down weight. Else, pass down psum
+//assign out_s = !weight_stationary ? (inst_w[1] ? c_q : b_q) : mac_out0; 
 endmodule

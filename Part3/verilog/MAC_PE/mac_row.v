@@ -9,15 +9,17 @@ module mac_row (clk, out_s, in_w, in_n, valid, inst_w, reset);
   input  clk, reset;
   output [psum_bw*col-1:0] out_s;
   output [col-1:0] valid;
-  input  [bw-1:0] in_w; // inst[1]:execute, inst[0]: kernel loading
-  input  [1:0] inst_w;
+  //inst[2] == 1: output_stationary, inst[1]:pass_psum, inst[0]: accumulate
+  //inst[2] == 0: weight stationary, inst[1]:execute, inst[0]: kernel loading
+  input  [bw-1:0] in_w; 
+  input  [2:0] inst_w; 
   input  [psum_bw*col-1:0] in_n;
 
   wire  [(col+1)*bw-1:0] temp; // Temp is passing either weights or the input
-  wire  [(col+1)*2:0] inst_temp; // Passing instruction
+  wire  [(col+1)*3:0] inst_temp; // Passing instruction
 
   assign temp[bw-1:0]   = in_w;
-  assign inst_temp[1:0] = inst_w;
+  assign inst_temp[2:0] = inst_w;
 
   genvar i;
   for (i=1; i < col+1 ; i=i+1) begin : col_num
@@ -26,12 +28,12 @@ module mac_row (clk, out_s, in_w, in_n, valid, inst_w, reset);
         .reset(reset),
         .in_w( temp[bw*(i-1)+: bw]),
         .out_e(temp[bw*i +: bw]),
-        .inst_w(inst_temp[2*(i-1) +: 2]),
-        .inst_e(inst_temp[2*i +: 2]),
+        .inst_w(inst_temp[3*(i-1) +: 3]),
+        .inst_e(inst_temp[3*i +: 3]),
         .in_n(in_n[psum_bw*(i-1) +: psum_bw]),
         .out_s(out_s[psum_bw*(i-1) +: psum_bw]));
 
-   assign valid[i-1] = inst_temp[2*i+1]; // " valid for the column is inst_e[1] for the column"
+   assign valid[i-1] = inst_temp[3*i+1]; // " valid for the column is inst_e[1] for the column"
   end
 
 endmodule

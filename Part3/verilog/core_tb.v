@@ -43,6 +43,7 @@ reg sfu_passthrough_q = 0;
 reg sfu_passthrough;
 reg REN_pmem_q = 0;
 reg REN_pmem;
+reg output_stationary;
 // reg [1:0] actFunc_q = 0;
 // reg [1:0] actFunc;
 reg debug = 0;
@@ -94,6 +95,7 @@ integer error;
 // assign inst_q[0]   = load_q; 
 assign inst_q[63] = debug; // Debug signal for psum_sram
 // assign inst_q[37:36] = actFunc;
+assign inst_q[36] = output_stationary;
 assign inst_q[35] = REN_pmem;
 assign inst_q[34] = sfu_passthrough;
 assign inst_q[33] = acc;
@@ -194,7 +196,7 @@ initial begin
   WEN_pmem = 0;
   psum_sram_ptr = 0;
   sfu_passthrough = 0;
-
+  output_stationary = 0;
   // $dumpfile("core_tb.vcd");
   // $dumpvars(0,core_tb);
   // $display("hello");
@@ -314,7 +316,7 @@ initial begin
     end
     #0.5 clk = 1'b0;  WEN_xmem = 1;  CEN_xmem = 1; A_xmem = 0; l0_wr = 0;// CHIP UNENABLE
     #0.5 clk = 1'b1; 
-
+    
     /////// Kernel loading to PEs ///////
     // L0 pass the weights to PE
     #0.5 clk = 1'b0; l0_rd = 1; 
