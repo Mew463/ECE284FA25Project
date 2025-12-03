@@ -18,7 +18,7 @@ module sram_32b_w2048_read_write (CLK, D, Q, CEN, WEN, REN, A);
   reg [10:0] add_q_prev;
   reg CEN_q;
   reg CEN_buf;
-  assign Q = memory[add_q_prev];
+  assign Q = memory[add_q];
 
   always @ (posedge CLK) begin
 
@@ -30,12 +30,12 @@ module sram_32b_w2048_read_write (CLK, D, Q, CEN, WEN, REN, A);
    if (!CEN || !CEN_q || !CEN_buf) begin // read  
       add_q <= A;
    end
-   if (!CEN_q) begin
-      add_q_prev <= add_q;
-   end
+  //  if (!CEN_q) begin
+  //     add_q_prev <= add_q;
+  //  end
 
-   if (!CEN_buf && WEN) begin // write
-      memory[add_q_prev] <= D; 
+   if (!CEN_q && WEN) begin // write
+      memory[add_q] <= D; 
    end
   end
 

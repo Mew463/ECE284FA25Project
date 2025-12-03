@@ -19,6 +19,7 @@ module ofifo (clk, in, out, rd, wr, o_full, reset, o_ready, o_valid);
   wire [col-1:0] full;
   reg  rd_en;
   reg  rd_en_buf;
+  reg  rd_en_buf_buf;
   
   genvar i;
 
@@ -31,7 +32,7 @@ module ofifo (clk, in, out, rd, wr, o_full, reset, o_ready, o_valid);
     .rd_clk(clk),
     .wr_clk(clk),
     // .rd(rd),
-    .rd(rd_en_buf),
+    .rd(rd_en),
     .wr(wr[i]),
     .o_empty(empty[i]),
     .o_full(full[i]),
@@ -45,10 +46,12 @@ module ofifo (clk, in, out, rd, wr, o_full, reset, o_ready, o_valid);
    if (reset) begin
       rd_en <= 0;
       rd_en_buf <= 0;
+      rd_en_buf_buf <= 0;
    end
    else begin
     rd_en <= rd;
     rd_en_buf <= rd_en;
+    rd_en_buf_buf <= rd_en_buf;
     end
    end
 

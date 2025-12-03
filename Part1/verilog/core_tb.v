@@ -63,6 +63,10 @@ wire ofifo_valid;
 wire [col*psum_bw-1:0] sfp_out;
 reg [col-1:0] psum_sram_ptr;
 
+/* ALPHA: Formal Intensive Verification */
+// reg [bw*row-1:0] act_memory [0:len_nij-1];
+// reg [bw*row-1:0] wgt_memory [0:len_kij-1];
+// reg [psum_bw*col-1:0] golden_output; // could also just fill `answer
 
 integer x_file, x_scan_file ; // file_handler
 integer w_file, w_scan_file ; // file_handler
@@ -160,6 +164,19 @@ function [31:0] onij;
     end
 endfunction
 
+/* ALPHA: Formal Intensive Verification */
+// task calculateCNN; 
+//   input [bw*row-1:0] input_act_mem [0:len_kij-1];
+//   input [bw*row-1:0] input_wgt_mem [0:len_kij-1];
+
+//   output [psum_bw*col-1:0] golden_output;
+
+//   reg [psum_bw-1:0] temp_psum [0:col-1];
+//   integer act_idx;
+//   integer wgt_idx;
+// endtask
+
+
 initial begin 
   acc      = 0; //totally making this up with accumulate
   D_xmem   = 0;
@@ -207,6 +224,9 @@ initial begin
   /////// Activation data writing to memory ///////
   for (t=0; t<len_nij; t=t+1) begin  
     #0.5 clk = 1'b0;  x_scan_file = $fscanf(x_file,"%32b", D_xmem); // Load the activations (inputs) into core.v
+    /* ALPHA: Formal Intensive Verification */
+    // act_memory[t] = $unsigned($random); // Loads arbitrary 32 bitstream 
+    // D_xmem = act_memory[t]; 
     WEN_xmem = 0; CEN_xmem = 0; 
     if (t>0) A_xmem = A_xmem + 1;
     #0.5 clk = 1'b1;   
@@ -271,7 +291,12 @@ initial begin
     A_xmem = 11'b10000000000; // Starting at address 1024 the weights are loaded
 
     for (t=0; t<col; t=t+1) begin  
-      #0.5 clk = 1'b0;  w_scan_file = $fscanf(w_file,"%32b", D_xmem); WEN_xmem = 0; CEN_xmem = 0; if (t>0) A_xmem = A_xmem + 1; 
+      #0.5 clk = 1'b0;  w_scan_file = $fscanf(w_file,"%32b", D_xmem);  
+      /* ALPHA: Formal Intensive Verification */ 
+      // wgt_memory[kij] = $unsigned($random); // Loads arbitrary 32 bitstream 
+      // D_xmem = wgt_memory[kij]; 
+
+      WEN_xmem = 0; CEN_xmem = 0; if (t>0) A_xmem = A_xmem + 1; 
       #0.5 clk = 1'b1;  
     end
 
@@ -330,7 +355,7 @@ initial begin
     #0.5 clk = 1'b1; 
     skippedFirst = 0;
     nij = -1;
-    for (t=0; t<len_nij + col + row + 1; t=t+1) begin  // 36 + 8 + 8 = 52
+    for (t=0; t<len_nij + col + row; t=t+1) begin  // 36 + 8 + 8 = 52
       #0.5 clk = 1'b0; 
       if(t<len_nij) begin
 
@@ -405,20 +430,19 @@ initial begin
   error = 0;
 
   $display("############ Verification Start during accumulation #############"); 
-  // 
-  CEN_pmem = 0;
-  A_pmem = 0; #0.5 clk = 1'b0; #0.5 clk = 1'b1; 
-  A_pmem = 1; #0.5 clk = 1'b0; #0.5 clk = 1'b1; 
-  for (i=2; i<len_onij + 2; i=i+1) begin 
-
-    #0.5 clk = 1'b0; 
+  // RIGHT NOW, THE ADDRESS BUFFERING IS WEIRD AS SHIT. WILL SHIFT DELAY TO THE OFIFO IDEALLY.
+  #0.5 clk = 1'b0; 
+  #0.5 clk = 1'b1; 
+  #0.5 clk = 1'b0; 
+  for (i=0; i<len_onij; i=i+1) begin 
+    CEN_pmem = 0;
     A_pmem = i;
-    #0.5 clk = 1'b1; 
+    #0.5 clk = 1'b1; #0.5 clk = 1'b0; 
     out_scan_file = $fscanf(out_file,"%128b", answer); // reading from out file to answer
     if (sfp_out == answer)
-      $display("%2d-th output featuremap Data matched! :D", i-2); 
+      $display("%2d-th output featuremap Data matched! :D", i); 
     else begin
-      $display("%2d-th output featuremap Data ERROR!!", i-2); 
+      $display("%2d-th output featuremap Data ERROR!!", i); 
       $display("sfpout: %128b", sfp_out);
       $display("answer: %128b", answer);
       error = error + 1;
