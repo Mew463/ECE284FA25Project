@@ -157,8 +157,8 @@ initial begin
   $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[1036]); 
   $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[1037]); 
   $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[1038]); 
-  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[1040]); 
-  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[1041]);
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[1039]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[1040]);
 end 
 
 function [31:0] onij;
@@ -350,7 +350,7 @@ initial begin
 
     for (weight_loading_stage = 0; weight_loading_stage < 2; weight_loading_stage = weight_loading_stage + 1) begin
       for (t=0; t<col + 1; t=t+1) begin  
-        #0.5 clk = 1'b0; l0_wr = 1; if (t>0) A_xmem = A_xmem + 1; 
+        #0.5 clk = 1'b0; l0_wr = 1; if (t>0) A_xmem = A_xmem + 1; // Write from SRAM -> L0
         #0.5 clk = 1'b1;  
       end
       #0.5 clk = 1'b0;  WEN_xmem = 1;  CEN_xmem = 1; l0_wr = 0; // CHIP UNENABLE
@@ -360,7 +360,7 @@ initial begin
       // L0 pass the weights to PE
       #0.5 clk = 1'b0; l0_rd = 1; 
       #0.5 clk = 1'b1; //Need one cycle for L0 to propogate signal to first column
-      for (t=0; t < col + row + weight_loading_stage * 16 ; t=t+1) begin // Takes 8 + 8 cycles for weights to propagate. Additional 8 since each tile has two weights   
+      for (t=0; t < col + weight_loading_stage * 16 ; t=t+1) begin // Takes 8 + 8 cycles for weights to propagate. Additional 8 since each tile has two weights   
         #0.5 clk = 1'b0; load = 1;
         #0.5 clk = 1'b1;  
       end
