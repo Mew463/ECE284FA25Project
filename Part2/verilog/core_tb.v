@@ -142,23 +142,23 @@ initial begin
   $dumpvars(1, core_instance.PSUM_sram.memory[47]); 
   $dumpvars(1, core_instance.PSUM_sram.memory[48]);
 
-  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[1024]); 
-  $dumpvars(1, core_instance.PSUM_sram.memory[1025]); 
-  $dumpvars(1, core_instance.PSUM_sram.memory[1026]); 
-  $dumpvars(1, core_instance.PSUM_sram.memory[1027]); 
-  $dumpvars(1, core_instance.PSUM_sram.memory[1028]); 
-  $dumpvars(1, core_instance.PSUM_sram.memory[1029]); 
-  $dumpvars(1, core_instance.PSUM_sram.memory[1030]); 
-  $dumpvars(1, core_instance.PSUM_sram.memory[1031]); 
-  $dumpvars(1, core_instance.PSUM_sram.memory[1032]); 
-  $dumpvars(1, core_instance.PSUM_sram.memory[1033]); 
-  $dumpvars(1, core_instance.PSUM_sram.memory[1034]); 
-  $dumpvars(1, core_instance.PSUM_sram.memory[1035]); 
-  $dumpvars(1, core_instance.PSUM_sram.memory[1036]); 
-  $dumpvars(1, core_instance.PSUM_sram.memory[1037]); 
-  $dumpvars(1, core_instance.PSUM_sram.memory[1038]); 
-  $dumpvars(1, core_instance.PSUM_sram.memory[1040]); 
-  $dumpvars(1, core_instance.PSUM_sram.memory[1041]);
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[1024]); // Showing weight loading
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[1025]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[1026]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[1027]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[1028]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[1029]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[1030]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[1031]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[1032]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[1033]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[1034]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[1035]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[1036]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[1037]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[1038]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[1040]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[1041]);
 end 
 
 function [31:0] onij;
@@ -364,6 +364,9 @@ initial begin
         #0.5 clk = 1'b0; load = 1;
         #0.5 clk = 1'b1;  
       end
+
+      #0.5 clk = 1'b0;  l0_rd = 0; load = 0; 
+      #0.5 clk = 1'b1; 
     end
 
     // #0.5 clk = 1'b0; #0.5 clk = 1'b1;
