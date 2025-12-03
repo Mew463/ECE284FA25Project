@@ -159,6 +159,45 @@ initial begin
   $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[1038]); 
   $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[1039]); 
   $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[1040]);
+
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[0]); // Showing weight loading
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[1]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[2]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[3]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[4]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[5]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[6]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[7]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[8]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[9]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[10]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[11]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[12]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[13]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[14]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[15]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[16]);
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[17]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[18]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[19]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[20]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[21]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[22]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[23]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[24]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[25]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[26]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[27]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[28]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[29]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[30]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[31]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[32]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[33]);
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[34]);
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[35]);
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[36]);
+
 end 
 
 function [31:0] onij;
@@ -350,8 +389,8 @@ initial begin
 
     for (weight_loading_stage = 0; weight_loading_stage < 2; weight_loading_stage = weight_loading_stage + 1) begin
       for (t=0; t<col + 1; t=t+1) begin  
-        #0.5 clk = 1'b0; l0_wr = 1; if (t>0) A_xmem = A_xmem + 1; // Write from SRAM -> L0
-        #0.5 clk = 1'b1;  
+        #0.5 clk = 1'b0; CEN_xmem = 0; l0_wr = 1; if (t>0) A_xmem = A_xmem + 1; // Write from SRAM -> L0
+        #0.5 clk = 1'b1; 
       end
       #0.5 clk = 1'b0;  WEN_xmem = 1;  CEN_xmem = 1; l0_wr = 0; // CHIP UNENABLE
       #0.5 clk = 1'b1; 
