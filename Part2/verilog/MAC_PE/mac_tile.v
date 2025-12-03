@@ -59,10 +59,10 @@ always @(posedge clk) begin
         if (inst_w[0] == 1 && load_ready_q2 == 1) begin
             if (separateweights) begin
                 if (load_ready_q1 == 1 ) begin 
-                    b_q1 <= in_w; // b_q1 holds the weights
+                    b_q2 <= in_w; // b_q2 holds the weights FIRST WEIGHT
                     load_ready_q1 <= 0;
                 end else if (load_ready_q2 == 1) begin 
-                    b_q2 <= in_w; // b_q2 holds the weights
+                    b_q1 <= in_w; // b_q1 holds the weights SECOND WEIGHT
                     load_ready_q2 <= 0;   
                 end
             end else begin 
