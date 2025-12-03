@@ -141,6 +141,24 @@ initial begin
   $dumpvars(1, core_instance.PSUM_sram.memory[46]); 
   $dumpvars(1, core_instance.PSUM_sram.memory[47]); 
   $dumpvars(1, core_instance.PSUM_sram.memory[48]);
+
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[1024]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[1025]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[1026]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[1027]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[1028]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[1029]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[1030]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[1031]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[1032]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[1033]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[1034]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[1035]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[1036]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[1037]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[1038]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[1040]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[1041]);
 end 
 
 function [31:0] onij;
@@ -161,6 +179,7 @@ function [31:0] onij;
     end
 endfunction
 integer oc_group;
+integer weight_loading_stage;
 // integer ic_group;
 initial begin 
   acc      = 0; //totally making this up with accumulate
@@ -312,7 +331,7 @@ initial begin
 
     A_xmem = 11'b10000000000; // Starting at address 1024 the weights are loaded
 
-    for (t=0; t<col; t=t+1) begin  
+    for (t=0; t<col*2; t=t+1) begin  
       #0.5 clk = 1'b0;  w_scan_file = $fscanf(w_file,"%32b", D_xmem); 
       // D_xmem = D_xmem_temp[ic_group*bw*row-1 +: 32] //grab correct section of weights for each ic tile
       WEN_xmem = 0; CEN_xmem = 0; if (t>0) A_xmem = A_xmem + 1; 
@@ -328,21 +347,25 @@ initial begin
     A_xmem = 11'b10000000000; // Since the weights are loaded at address 1024, make sure we start there
     #0.5 clk = 1'b0; WEN_xmem = 1; CEN_xmem = 0;
     #0.5 clk = 1'b1; 
-    for (t=0; t<col + 1; t=t+1) begin  
-      #0.5 clk = 1'b0; l0_wr = 1; if (t>0) A_xmem = A_xmem + 1; 
-      #0.5 clk = 1'b1;  
-    end
-    #0.5 clk = 1'b0;  WEN_xmem = 1;  CEN_xmem = 1; A_xmem = 0; l0_wr = 0;// CHIP UNENABLE
-    #0.5 clk = 1'b1; 
 
-    /////// Kernel loading to PEs ///////
-    // L0 pass the weights to PE
-    #0.5 clk = 1'b0; l0_rd = 1; 
-    #0.5 clk = 1'b1; //Need one cycle for L0 to propogate signal to first column
-    for (t=0; t < col + row + 8 ; t=t+1) begin // Takes 8 + 8 cycles for weights to propagate. Additional 8 since each tile has two weights   
-      #0.5 clk = 1'b0; load = 1;
-      #0.5 clk = 1'b1;  
+    for (weight_loading_stage = 0; weight_loading_stage < 2; weight_loading_stage = weight_loading_stage + 1) begin
+      for (t=0; t<col + 1; t=t+1) begin  
+        #0.5 clk = 1'b0; l0_wr = 1; if (t>0) A_xmem = A_xmem + 1; 
+        #0.5 clk = 1'b1;  
+      end
+      #0.5 clk = 1'b0;  WEN_xmem = 1;  CEN_xmem = 1; l0_wr = 0; // CHIP UNENABLE
+      #0.5 clk = 1'b1; 
+
+      /////// Kernel loading to PEs ///////
+      // L0 pass the weights to PE
+      #0.5 clk = 1'b0; l0_rd = 1; 
+      #0.5 clk = 1'b1; //Need one cycle for L0 to propogate signal to first column
+      for (t=0; t < col + row + weight_loading_stage * 16 ; t=t+1) begin // Takes 8 + 8 cycles for weights to propagate. Additional 8 since each tile has two weights   
+        #0.5 clk = 1'b0; load = 1;
+        #0.5 clk = 1'b1;  
+      end
     end
+
     // #0.5 clk = 1'b0; #0.5 clk = 1'b1;
 
     ////// provide some intermission to clear up the kernel loading ///
