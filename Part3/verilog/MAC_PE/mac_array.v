@@ -15,7 +15,7 @@ module mac_array (clk, reset, out_s, in_w, in_n, inst_w, valid, weight_stationar
   output [col-1:0] valid;
   input pass_psum, weight_stationary, recall_psum;
 
-  reg    [2*row-1:0] inst_w_temp; //Importantly, the instruction is passed north to south, 
+  reg    [2*row-1:0] inst_w_temp; // Importantly, the instruction is passed north to south, 
   wire   [psum_bw*col*(row+1)-1:0] temp;
   wire   [row*col-1:0] valid_temp;
 

@@ -29,8 +29,8 @@ mac #(.bw(bw), .psum_bw(psum_bw)) weight_stationary_mac (
     .out(weight_stationary_mac_out)
 ); 
 mac #(.bw(bw), .psum_bw(psum_bw)) output_stationary_mac (
-    .a(in_w), 
-    .b(in_n[bw-1:0]),
+    .a(a_q), 
+    .b(b_q[bw-1:0]),
     .c(c_q),
     .out(output_stationary_mac_out)
 ); 

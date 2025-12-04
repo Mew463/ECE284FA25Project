@@ -212,6 +212,7 @@ initial begin
     WEN_xmem = 1;
     A_xmem   = 0;
     ofifo_rd = 0;
+    ofifo_wr = 0;
     ififo_wr = 0;
     ififo_rd = 0;
     l0_rd    = 0;
