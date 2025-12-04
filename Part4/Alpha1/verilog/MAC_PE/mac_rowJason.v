@@ -1,0 +1,44 @@
+// Created by prof. Mingu Kang @VVIP Lab in UCSD ECE department
+// Please do not spread this code without permission 
+module mac_row (clk, out_s, in_w, in_n, valid, inst_w, reset);
+
+  parameter bw = 4;
+  parameter psum_bw = 16;
+  parameter col = 8;
+
+  input  clk, reset;
+  output [psum_bw*col-1:0] out_s;
+  output [col-1:0] valid;
+  input  [bw-1:0] in_w; // inst[1]:execute, inst[0]: kernel loading
+  input  [1:0] inst_w;
+  input  [psum_bw*col-1:0] in_n;
+
+  wire  [(col+1)*bw-1:0] temp; // Temp is passing either weights or the input
+  wire  [(col+1)*2:0] inst_temp; // Passing instruction
+  wire [col-1:0] zero; // When high, this means weight/activation = 0, so relay to `mac_tile` so that `mac` isn't activated
+
+  assign temp[bw-1:0]   = in_w;
+  assign inst_temp[1:0] = inst_w;
+
+
+  genvar i;
+  generate
+  for (i=1; i < col+1 ; i=i+1) begin : col_num
+      assign zero[i-1] = (inst_temp[2*(i-1)] || inst_temp[2*i-1]) ? // If weight or activation load:
+                ((temp[bw*(i-1)+: bw] == 0) ? 1 : 0) : // If weight or activation is 0
+                0;
+      mac_tile #(.bw(bw), .psum_bw(psum_bw)) mac_tile_instance (
+        .clk(clk),
+        .reset(reset),
+        .in_w( temp[bw*(i-1)+: bw]),
+        .out_e(temp[bw*i +: bw]),
+        .inst_w(inst_temp[2*(i-1) +: 2]),
+        .inst_e(inst_temp[2*i +: 2]),
+        .in_n(in_n[psum_bw*(i-1) +: psum_bw]),
+        .out_s(out_s[psum_bw*(i-1) +: psum_bw]),
+        .zero(zero[i-1]));
+   
+   assign valid[i-1] = inst_temp[2*i+1]; // " valid for the column is inst_e[1] for the column"
+  end
+  endgenerate
+endmodule
