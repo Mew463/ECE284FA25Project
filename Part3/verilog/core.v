@@ -64,18 +64,17 @@ module core(clk, inst, ofifo_valid, D_xmem, sfp_out, reset);
     );
 
     assign l1_mac_bridge = output_stationary ? l1_output:{psum_bw*col{1'b0}};
-        mac_array macarray (
+    mac_array macarray (
         .clk(clk),
         .reset(reset),
         .out_s(out_s),
         .in_w(l0_mac_bridge),
-        .in_n(l1_mac_bridge),
+        .in_n({psum_bw*col{1'b0}}), // This should be l1_mac_bridge for output stationary mapping 
         .inst_w({execute, load}),
         .valid(mac_ofifo_valid_bridge),
         .weight_stationary(!output_stationary), // This is annoying that the testbench uses output stationary wording
         .pass_psum(pass_psum),
         .recall_psum(recall_psum));
-    );
 
     sram_32b_w2048_read_write PSUM_sram (
         .CLK(clk),

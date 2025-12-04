@@ -87,7 +87,7 @@ integer w_file, w_scan_file ; // file_handler
 integer acc_file, acc_scan_file ; // file_handler
 integer out_file, out_scan_file ; // file_handler
 integer captured_data; 
-integer t, i, j, k, kij, a;
+integer t, i, j, k, kij, a, ic;
 integer error;
 
 
@@ -246,6 +246,12 @@ initial begin
     /////////////////////////////////////////////////
 
     /////// Weight Data Writing to SRAM /////////////
+    /** Output stationary (loop input channel times)
+    * SRAM => L0; SRAM => L1; (9*8 4-bit input each time)
+    * Load W and X into PE and accumulate
+    * Note: Due to limitation of L0 and L1, we are only to loop through the loading and accumulation process for input channel times.
+    */
+    // 
     w_file = $fopen(w_file_name, "r");
     // Following three lines are to remove the first three comment lines of the file
     w_scan_file = $fscanf(w_file,"%s", captured_data);
@@ -271,7 +277,7 @@ initial begin
         A_xmem = 10'b1001000000 //starting at 576 (weight)
         for (t=0; t<kij*len_onij/2 * row; t=t+1) begin  // 9*8*8 = 576 preprocessed values are needed when only half of o/c 
             #0.5 clk = 1'b0;  x_scan_file = $fscanf(w_file,"%32b", D_xmem); 
-            WEN_xmem = 0; CEN_xmem = 0; 
+            WEN_xmem = 0; CEN_xmem = 0; //write to SRAM
             if (t>0) A_xmem = A_xmem + 1; 
             #0.5 clk = 1'b1;   
         end
@@ -279,20 +285,72 @@ initial begin
         #0.5 clk = 1'b1; 
 
         $fclose(w_file);
+
+        for(ic=0; ic<8; ic=ic+1)  begin //loop ic times for loading and accumulation
+            /////// Activation Data Writing to L0 /////////////
+            A_xmem = ic*9 //starting at 0 (activation)
+            #0.5 clk = 1'b0; WEN_xmem = 1; CEN_xmem = 0;
+            #0.5 clk = 1'b1; 
+            
+            for (t=0; t<rows*len_kij+1; t=t+1) begin  //load in all activation for the first input channel 8*9 -- output nij * preprocessed nij to fit kernel multiplication
+            #0.5 clk = 1'b0; l0_wr = 1; if (t>0) A_xmem = A_xmem + 1; 
+            #0.5 clk = 1'b1;  
+            end
+
+            #0.5 clk = 1'b0;  WEN_xmem = 1;  CEN_xmem = 1; A_xmem = 0; l0_wr = 0;// CHIP Disable
+            #0.5 clk = 1'b1;
+
+            /////// Weight Data Writing to L1 /////////////
+            A_xmem = 10'b1001000000 + ic*9//starting at 576 (weight)
+            #0.5 clk = 1'b0; WEN_xmem = 1; CEN_xmem = 0;
+            #0.5 clk = 1'b1; 
+            
+            for (t=0; t<rows*len_kij+1; t=t+1) begin  
+            #0.5 clk = 1'b0; l1_wr = 1; if (t>0) A_xmem = A_xmem + 1; 
+            #0.5 clk = 1'b1;  
+            end
+
+            #0.5 clk = 1'b0;  WEN_xmem = 1;  CEN_xmem = 1; A_xmem = 0; l1_wr = 0;// CHIP Disable
+            #0.5 clk = 1'b1; 
+
+            ///// Weight and Activation load from SRAM and accumulate ////
+            l0_rd = 1;
+            l0_wr = 1; l1_wr = 1;
+            WEN_xmem = 1; CEN_xmem = 0;
+            #0.5 clk = 1'b1; 
+
+            for(i = 0, i < len_kij + col + row, i=i+1) begin // compute 
+                #0.5 clk = 1'b0;
+                if(i < len_kij) begin 
+                    l0_rd = 1; accumulate = 1; // L0&L1 -> PE ; accumulate
+                end else begin
+                    l0_rd = 0; accumulate = 0;
+                end
+                #0.5 clk = 1'b1; 
+            end
+                
+        end
+    
+    //////// Finished accumulation, Sending Signal to output to OFIFO////
+    
+
     end else begin
     //weight stationary version // 
-    // Note: weight staionary version does not have a seperate weight loading. It is combined with L0=>mac.
+    //////// Kernel loading /////
+    /////// Whole Activation processing cycle -- weight stationary///////
+      /*
+      1) SRAM(activation) -> L0
+      2) L0 -> PE (execute)
+      3) Is there a complete row in OFIFO filled? 
+        Yes: Accumulate
+      4) Repeat
+      5) Store output in PSUM SRAM
+      */
 
+    
     end    
     /////////////////////////////////////////////////
 
-
-    /////// Weight Data Writing to L1 /////////////
-    if(output_stationary) begin
-        A_xmem = 10'b1001000000; //starting at 576 (weight)
-        #0.5 clk = 1'b0; WEN_xmem = 1; CEN_xmem = 0;
-        #0.5 clk = 1'b1; 
-    end
 
 end
 endmodule
