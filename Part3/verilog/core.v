@@ -23,6 +23,7 @@ module core(clk, inst, ofifo_valid, D_xmem, sfp_out, reset);
     // Expand the instruction bus from the core_tb
     wire debug = inst[63];
     // wire[1:0] actFunc = inst_q[37:36];
+    wire l1_wr    = inst[37];
     wire output_stationary = inst[36];
     wire REN_pmem = inst[35];
     wire passthrough = inst[34];
@@ -46,6 +47,7 @@ module core(clk, inst, ofifo_valid, D_xmem, sfp_out, reset);
     wire [row*bw-1:0] l0_mac_bridge;
     wire [psum_bw*col-1:0] sram_l1_bridge; 
     wire [row*bw-1:0] l1_mac_bridge;
+    wire [row*bw-1:0] l1_output;
 
     wire ofifo_full, ofifo_ready, ofifo_valid;
     wire [col-1:0] mac_ofifo_valid_bridge;
@@ -61,14 +63,18 @@ module core(clk, inst, ofifo_valid, D_xmem, sfp_out, reset);
         .o_valid(ofifo_valid)
     );
 
-    mac_array macarray (
+    assign l1_mac_bridge = output_stationary ? l1_output:{psum_bw*col{1'b0}};
+        mac_array macarray (
         .clk(clk),
         .reset(reset),
         .out_s(out_s),
         .in_w(l0_mac_bridge),
-        .in_n({psum_bw*col{1'b0}}),
-        .inst_w({output_stationary, execute, load}),
-        .valid(mac_ofifo_valid_bridge)
+        .in_n(l1_mac_bridge),
+        .inst_w({execute, load}),
+        .valid(mac_ofifo_valid_bridge),
+        .weight_stationary(!output_stationary), // This is annoying that the testbench uses output stationary wording
+        .pass_psum(pass_psum),
+        .recall_psum(recall_psum));
     );
 
     sram_32b_w2048_read_write PSUM_sram (
@@ -91,6 +97,8 @@ module core(clk, inst, ofifo_valid, D_xmem, sfp_out, reset);
         .A(A_xmem) // Address
     );
 
+
+
     wire o_full, o_ready;
 
     // reg all_row_at_a_time;
@@ -108,8 +116,8 @@ module core(clk, inst, ofifo_valid, D_xmem, sfp_out, reset);
 
     l0 NORTH_l0 (
         .clk(clk),
-        .in(sram_l1_bridge[row*bw-1:0]),
-        .out(l1_mac_bridge),
+        .in(sram_l0_bridge[row*bw-1:0]),
+        .out(l1_output),
         .rd(l0_rd),
         .wr(l1_wr),
         .o_full(o_full),
