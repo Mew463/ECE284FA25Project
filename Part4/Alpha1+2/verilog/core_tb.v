@@ -176,6 +176,7 @@ initial begin
   WEN_pmem = 0;
   psum_sram_ptr = 0;
   sfu_passthrough = 0;
+  actFunc = 2'b00;
 
   // $dumpfile("core_tb.vcd");
   // $dumpvars(0,core_tb);
@@ -402,15 +403,18 @@ initial begin
   #0.5 clk = 1'b1; 
   #0.5 clk = 1'b0;
   for (i=0; i<len_onij; i=i+1) begin 
+    #0.5 clk = 1'b0;
     CEN_pmem = 0;
     A_pmem = i;
     WEN_pmem = 1;
     sfu_passthrough = 0;
     acc = 0;
-    actFunc = 2'b00; // normal ReLU
-    // actFunc = 2'b01;    // leaky ReLU
-    #0.5 clk = 1'b1;  
+    //actFunc = 2'b00; // normal ReLU
+    actFunc = 2'b01;    // leaky ReLU
+    #0.5 clk = 1'b1; 
   end
+  #0.5 clk = 1'b0;
+  #0.5 clk = 1'b1;
   #0.5 clk = 1'b0;
   CEN_pmem = 1; // Disable SRAM psum 
   WEN_pmem = 0;
@@ -420,13 +424,13 @@ initial begin
 
   // #################  SELECT OUTPUT FILE ################# //
   // NON-RELU VER
-  // out_file = $fopen("out.txt", "r");
+  out_file = $fopen("out.txt", "r");
   
   // ReLU VER 
   out_file = $fopen("out_relu.txt", "r");
       
   // Leaky ReLU Ver
-  // out_file = $fopen("out_leaky_relu.txt", "r");  
+  out_file = $fopen("out_leaky_relu.txt", "r");  
 
   // Following three lines are to remove the first three comment lines of the file
   out_scan_file = $fscanf(out_file,"%s", answer); 
