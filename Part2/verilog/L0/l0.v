@@ -1,6 +1,6 @@
 // Created by prof. Mingu Kang @VVIP Lab in UCSD ECE department
 // Please do not spread this code without permission 
-module l0 (clk, in, out, rd, wr, o_full, reset, o_ready);
+module l0 (clk, in, out, rd, wr, o_full, reset, o_ready, all_row_at_a_time);
 
   parameter row  = 8;
   parameter bw = 4;
@@ -10,6 +10,7 @@ module l0 (clk, in, out, rd, wr, o_full, reset, o_ready);
   input  rd;
   input  reset;
   input  [row*bw-1:0] in;
+  input all_row_at_a_time; // Seems unnecessary
   output [row*bw-1:0] out;
   output o_full; // Enabled if ANY of the slots are full
   output o_ready; // Informs that there is at least a room to receive a new vector
@@ -20,7 +21,7 @@ module l0 (clk, in, out, rd, wr, o_full, reset, o_ready);
   
   genvar i;
 
-  assign o_ready = ~(|full) ; // If they are all not empty, then output is ready 
+  assign o_ready = ~(|full) ; // If they are all not full, then o_ready is true (we can take another vector)
   assign o_full  = |full; // Reduction OR, basically just OR everything together
 
 
@@ -43,25 +44,25 @@ module l0 (clk, in, out, rd, wr, o_full, reset, o_ready);
       rd_en <= 8'b00000000;
    end
    else
-
-      /////////////// version1: read all row at a time ////////////////
-      // if (rd) begin 
-      //    rd_en <= 8'b11111111;
-      // end
-      // else begin 
-      //    rd_en <= 8'b0;
-      // end
-      ///////////////////////////////////////////////////////
-
-
-      //////////////// version2: read 1 row at a time /////////////////
-      if (rd) begin 
-         rd_en <= {rd_en[6:0], 1'b1};
+      if (all_row_at_a_time) begin
+         /////////////// version1: read all row at a time ////////////////
+         if (rd) begin 
+            rd_en <= 8'b11111111;
+         end
+         else begin 
+            rd_en <= 8'b0;
+         end
+      end 
+      else begin // probably always going to be using the below case
+         //////////////// version2: read 1 row at a time /////////////////
+         if (rd) begin 
+            rd_en <= {rd_en[row-2:0], 1'b1};
+         end
+         else begin 
+            rd_en <= {rd_en[row-2:0], 1'b0};
+         end
       end
-      else begin 
-         rd_en <= 8'b0;
-      end
-      ///////////////////////////////////////////////////////
+
     end
 
 endmodule

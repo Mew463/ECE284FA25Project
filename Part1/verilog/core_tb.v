@@ -63,11 +63,6 @@ wire ofifo_valid;
 wire [col*psum_bw-1:0] sfp_out;
 reg [col-1:0] psum_sram_ptr;
 
-/* ALPHA: Formal Intensive Verification */
-// reg [bw*row-1:0] act_memory [0:len_nij-1];
-// reg [bw*row-1:0] wgt_memory [0:len_kij-1];
-// reg [psum_bw*col-1:0] golden_output; // could also just fill `answer
-
 integer x_file, x_scan_file ; // file_handler
 integer w_file, w_scan_file ; // file_handler
 integer acc_file, acc_scan_file ; // file_handler
@@ -164,18 +159,6 @@ function [31:0] onij;
     end
 endfunction
 
-/* ALPHA: Formal Intensive Verification */
-// task calculateCNN; 
-//   input [bw*row-1:0] input_act_mem [0:len_kij-1];
-//   input [bw*row-1:0] input_wgt_mem [0:len_kij-1];
-
-//   output [psum_bw*col-1:0] golden_output;
-
-//   reg [psum_bw-1:0] temp_psum [0:col-1];
-//   integer act_idx;
-//   integer wgt_idx;
-// endtask
-
 
 initial begin 
   acc      = 0; //totally making this up with accumulate
@@ -224,9 +207,7 @@ initial begin
   /////// Activation data writing to memory ///////
   for (t=0; t<len_nij; t=t+1) begin  
     #0.5 clk = 1'b0;  x_scan_file = $fscanf(x_file,"%32b", D_xmem); // Load the activations (inputs) into core.v
-    /* ALPHA: Formal Intensive Verification */
-    // act_memory[t] = $unsigned($random); // Loads arbitrary 32 bitstream 
-    // D_xmem = act_memory[t]; 
+
     WEN_xmem = 0; CEN_xmem = 0; 
     if (t>0) A_xmem = A_xmem + 1;
     #0.5 clk = 1'b1;   
@@ -292,9 +273,6 @@ initial begin
 
     for (t=0; t<col; t=t+1) begin  
       #0.5 clk = 1'b0;  w_scan_file = $fscanf(w_file,"%32b", D_xmem);  
-      /* ALPHA: Formal Intensive Verification */ 
-      // wgt_memory[kij] = $unsigned($random); // Loads arbitrary 32 bitstream 
-      // D_xmem = wgt_memory[kij]; 
 
       WEN_xmem = 0; CEN_xmem = 0; if (t>0) A_xmem = A_xmem + 1; 
       #0.5 clk = 1'b1;  
@@ -394,7 +372,7 @@ initial begin
           // Last `t` before goes all X: all start at 18
           // 0: 52, 1-2: 34, 3-5: 35; 6-8: 36
           $timeformat(-9, 2, " ns", 20); // Unit in ns (-9), 2 decimal places, " ns" suffix, field width 20 
-          $display("kij = %d, sfpout: %16b sfpout: %d time: %t", kij, sfp_out[15:0],sfp_out[15:0], $time);
+          $display("kij = %d, sfpout: %16b sfpout: %d time: %t", kij, sfp_out[15:0], $signed(sfp_out[15:0]), $time);
         end
         // $timeformat(-9, 2, " ns", 20); // Unit in ns (-9), 2 decimal places, " ns" suffix, field width 20 
         // $display("t: %d, kij = %d, sfpout: %16b sfpout: %d time: %t", t, kij, sfp_out[15:0],sfp_out[15:0], $time);          
@@ -418,9 +396,27 @@ initial begin
 
   end  // end of kij loop
 
-
-  ////////// Accumulation /////////
+  
+  /* RELU AND ALPHA: LEAKY_RELU TEST*/
+  #0.5 clk = 1'b0; 
+  #0.5 clk = 1'b1; 
+  #0.5 clk = 1'b0;
+  for (i=0; i<len_onij; i=i+1) begin 
+    CEN_pmem = 0;
+    A_pmem = i;
+    WEN_pmem = 1;
+    sfu_passthrough = 0;
+    acc = 0;
+    #0.5 clk = 1'b1;  
+  end
+  #0.5 clk = 1'b0;
+  CEN_pmem = 1; // Disable SRAM psum 
+  WEN_pmem = 0;
+  // #################  SELECT OUTPUT FILE ################# //
   out_file = $fopen("out.txt", "r");  
+
+   // ReLU VER 
+  out_file = $fopen("out_relu.txt", "r");
 
   // Following three lines are to remove the first three comment lines of the file
   out_scan_file = $fscanf(out_file,"%s", answer); 
@@ -430,7 +426,6 @@ initial begin
   error = 0;
 
   $display("############ Verification Start during accumulation #############"); 
-  // RIGHT NOW, THE ADDRESS BUFFERING IS WEIRD AS SHIT. WILL SHIFT DELAY TO THE OFIFO IDEALLY.
   #0.5 clk = 1'b0; 
   #0.5 clk = 1'b1; 
   #0.5 clk = 1'b0; 
