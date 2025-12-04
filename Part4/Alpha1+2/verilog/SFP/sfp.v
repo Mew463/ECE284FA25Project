@@ -16,7 +16,7 @@ module sfp(psum_in, ofifo_in, accum, actFunc, sfp_out, passthrough);
     wire [psum_bw-1:0] mask = {6'b111111, {(psum_bw-6){1'b0}}};
 
 assign sfp_out =
-    actFunc[1] ? sram_in : // if actFunc[1] == 1, then just read.
+    actFunc[1] ? psum_in : // if actFunc[1] == 1, then just read.
     passthrough  ? ofifo_in :                   // passthrough path
         accum        ? (psum_in + ofifo_in) :       // accumulation or ReLUs 
             (psum_in[psum_bw-1] == 1) ? // check if negative
