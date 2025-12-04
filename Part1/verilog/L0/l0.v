@@ -24,7 +24,7 @@ module l0 (clk, in, out, rd, wr, o_full, reset, o_ready, all_row_at_a_time);
   assign o_ready = ~(|full) ; // If they are all not full, then o_ready is true (we can take another vector)
   assign o_full  = |full; // Reduction OR, basically just OR everything together
 
-
+   generate
   for (i=0; i<row ; i=i+1) begin : row_num
       fifo_depth64 #(.bw(bw)) fifo_instance (
 	   .rd_clk(clk),
@@ -37,7 +37,7 @@ module l0 (clk, in, out, rd, wr, o_full, reset, o_ready, all_row_at_a_time);
       .out(out[(i+1)*bw-1:i*bw]),
       .reset(reset));
   end
-
+   endgenerate
 
   always @ (posedge clk) begin
    if (reset) begin
