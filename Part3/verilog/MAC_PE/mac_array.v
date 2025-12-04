@@ -23,7 +23,7 @@ module mac_array (clk, reset, out_s, in_w, in_n, inst_w, valid, weight_stationar
   genvar i;
  
   assign out_s = temp[psum_bw*col*row +: psum_bw*col];
-  assign temp[0 +: psum_bw*col] = 0;
+  assign temp[0 +: psum_bw*col] = in_n;
   assign valid = valid_temp[col*(row-1) +: col];
 
   for (i=1; i < row+1 ; i=i+1) begin : row_num

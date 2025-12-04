@@ -60,7 +60,7 @@ always @(posedge clk) begin
         end
     end else begin  //output stationary
         inst_q <= inst_w; // Pass the instruction left to right
-        if(inst_w[0]) begin //, inst[0]: execute
+        if(inst_w[1]) begin //, inst[0]: execute
             a_q <= in_w; // activations from left
             b_q <= in_n; // weights from above
             c_q <= output_stationary_mac_out; // to do self accumulation

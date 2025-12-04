@@ -44,11 +44,10 @@ module core(clk, inst, ofifo_valid, D_xmem, sfp_out, reset);
     wire execute    = inst[1];
     wire load       = inst[0];
 
-
     wire [psum_bw*col-1:0] sram_l0_bridge; 
     wire [row*bw-1:0] l0_mac_bridge;
     wire [psum_bw*col-1:0] sram_l1_bridge; 
-    wire [row*bw-1:0] l1_mac_bridge;
+    wire [psum_bw*col-1:0] l1_mac_bridge;
     wire [row*bw-1:0] l1_output;
 
     wire ofifo_full, ofifo_ready, ofifo_valid;
@@ -65,13 +64,22 @@ module core(clk, inst, ofifo_valid, D_xmem, sfp_out, reset);
         .o_valid(ofifo_valid)
     );
 
-    assign l1_mac_bridge = output_stationary ? l1_output:{psum_bw*col{1'b0}};
+    genvar k;
+    wire [127:0] expanded;
+    generate
+        for (k = 0; k < 8; k = k + 1) begin
+            assign expanded[(k+1)*16-1 : k*16] = {12'b0, l1_output[k*4 +: 4]};
+        end
+    endgenerate
+
+    assign l1_mac_bridge = output_stationary ? expanded : {psum_bw*col{1'b0}};
+    // assign l1_mac_bridge = output_stationary ? l1_output:{psum_bw*col{1'b0}}; // needs to change
     mac_array macarray (
         .clk(clk),
         .reset(reset),
         .out_s(out_s),
         .in_w(l0_mac_bridge),
-        .in_n({psum_bw*col{1'b0}}), // This should be l1_mac_bridge for output stationary mapping 
+        .in_n(l1_mac_bridge), // This should be l1_mac_bridge for output stationary mapping 
         .inst_w({execute, load}),
         .valid(mac_ofifo_valid_bridge),
         .weight_stationary(!output_stationary), // This is annoying that the testbench uses output stationary wording
@@ -100,7 +108,8 @@ module core(clk, inst, ofifo_valid, D_xmem, sfp_out, reset);
 
 
 
-    wire o_full, o_ready;
+    wire l0_o_full, l0_o_ready;
+    wire l1_o_full, l1_o_ready;
 
     // reg all_row_at_a_time;
     l0 WEST_l0 (
@@ -109,9 +118,9 @@ module core(clk, inst, ofifo_valid, D_xmem, sfp_out, reset);
         .out(l0_mac_bridge),
         .rd(l0_rd),
         .wr(l0_wr),
-        .o_full(o_full),
+        .o_full(l0_o_full),
         .reset(reset),
-        .o_ready(o_ready),
+        .o_ready(l0_o_ready),
         .all_row_at_a_time(1'b0) // Dont use for vanilla version (or ever probably)
     );
 
@@ -121,9 +130,9 @@ module core(clk, inst, ofifo_valid, D_xmem, sfp_out, reset);
         .out(l1_output),
         .rd(l0_rd),
         .wr(l1_wr),
-        .o_full(o_full),
+        .o_full(l1_o_full),
         .reset(reset),
-        .o_ready(o_ready),
+        .o_ready(l1_o_ready),
         .all_row_at_a_time(1'b0) // Dont use for vanilla version (or ever probably)
     );
     

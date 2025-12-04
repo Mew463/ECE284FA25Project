@@ -71,7 +71,7 @@ reg load;
 reg pass_psum;
 reg recall_psum;
 
-reg [8*64:1] w_file_name; // take care of weight file one output channel at a time
+reg [8*128:1] w_file_name; // take care of weight file one output channel at a time
 wire ofifo_valid;
 
 // weight stationary sfp output
@@ -84,7 +84,8 @@ integer x_file, x_scan_file ; // file_handler
 integer w_file, w_scan_file ; // file_handler
 integer acc_file, acc_scan_file ; // file_handler
 integer out_file, out_scan_file ; // file_handler
-integer captured_data; 
+reg [1024:0] captured_data; 
+reg [8*256:1] dummy_line;
 integer t, i, j, k, kij, a, ic;
 integer error;
 
@@ -115,6 +116,7 @@ assign inst_q[0]   = load;
 // integer skippedFirst; // for weight stationary ?
 integer o_nij_index;
 integer nij;
+integer debug1;
 
 core  #(.bw(bw), .col(col), .row(row)) core_instance (
 	.clk(clk), 
@@ -230,9 +232,12 @@ initial begin
     x_file = $fopen("output_stationary_data/activation_os.txt", "r"); 
     // x_file = $fopen("activation_tile0.txt", "r"); 
     // Following three lines are to remove the first three comment lines of the file
-    for (i = 0; i < 0; i++) begin
-        x_scan_file = $fscanf(x_file,"%s", captured_data); // Remove the first 11 lines
-    end
+    // for (i = 0; i < 11; i++) begin
+    //     x_scan_file = $fscanf(x_file,"%s", captured_data); // Remove the first 11 lines
+    // end
+    // repeat (11) begin
+    //         $fgets(dummy_line, x_file);
+    // end
     //////// Reset /////////
     #0.5 clk = 1'b0;   reset = 1;
     #0.5 clk = 1'b1; 
@@ -252,6 +257,11 @@ initial begin
     if(output_stationary) begin
         for (t=0; t<len_kij*len_onij/2; t=t+1) begin  // 9*8 = 576 preprocessed values are needed when only half of o/c 
             #0.5 clk = 1'b0;  x_scan_file = $fscanf(x_file,"%32b", D_xmem); // Load the activations (inputs) into core.v
+            if (x_scan_file == 0)
+                $display("ERROR: fscanf failed for input activations line=%0d", t);
+            else
+                $display("SUCCESS: read %b", D_xmem);
+
             /* ALPHA: Formal Intensive Verification */
             // act_memory[t] = $unsigned($random); // Loads arbitrary 32 bitstream 
             // D_xmem = act_memory[t]; 
@@ -273,11 +283,11 @@ initial begin
     * Note: Due to limitation of L0 and L1, we are only to loop through the loading and accumulation process for input channel times.
     */
     // 
-    w_file_name = "output_stationary_data/weights_os.txt"; 
-    w_file = $fopen(w_file_name, "r");
-    for (i = 0; i < 7; i++) begin // Remove the first 7 lines for weights
-        w_scan_file = $fscanf(w_file,"%s", captured_data);
-    end
+    // w_file_name = "output_stationary_data/weights_os.txt"; 
+    w_file = $fopen("output_stationary_data/weights_os.txt", "r");
+    // for (i = 0; i < 7; i++) begin // Remove the first 7 lines for weights
+    //     w_scan_file = $fscanf(w_file,"%s", captured_data);
+    // end
     
     #0.5 clk = 1'b0;   reset = 1;
     #0.5 clk = 1'b1; 
@@ -296,7 +306,11 @@ initial begin
     //output stationary version //
         A_xmem = 10'b1001000000; //starting at 576 (weight)
         for (t=0; t<len_kij*len_onij/2; t=t+1) begin  // 9*8  576 preprocessed values are needed when only half of o/c 
-            #0.5 clk = 1'b0;  x_scan_file = $fscanf(w_file,"%32b", D_xmem); 
+            #0.5 clk = 1'b0;  w_scan_file = $fscanf(w_file,"%32b", D_xmem); 
+            if (w_scan_file == 0)
+                $display("ERROR: fscanf failed for weights line=%0d", t);
+            else
+                $display("SUCCESS: read %b", D_xmem);
             WEN_xmem = 0; CEN_xmem = 0; //write to SRAM
             if (t>0) A_xmem = A_xmem + 1; 
             #0.5 clk = 1'b1;   
@@ -307,7 +321,7 @@ initial begin
         $fclose(w_file);
 
         for(ic=0; ic<8; ic=ic+1)  begin //loop ic times for loading and accumulation
-            /////// Activation Data Writing to L0 /////////////
+                /////// Activation Data Writing to L0 /////////////
                 A_xmem = ic*9; //starting at 0 (activation)
                 #0.5 clk = 1'b0; WEN_xmem = 1; CEN_xmem = 0;
                 #0.5 clk = 1'b1; 
@@ -325,20 +339,18 @@ initial begin
                 #0.5 clk = 1'b0; WEN_xmem = 1; CEN_xmem = 0;
                 #0.5 clk = 1'b1; 
                 
-                for (t=0; t<row*len_kij+1; t=t+1) begin  
+                for (t=0; t<len_kij+1; t=t+1) begin  
                 #0.5 clk = 1'b0; l1_wr = 1; if (t>0) A_xmem = A_xmem + 1; 
                 #0.5 clk = 1'b1;  
                 end
 
                 #0.5 clk = 1'b0;  WEN_xmem = 1;  CEN_xmem = 1; A_xmem = 0; l1_wr = 0;// CHIP Disable
+                 l0_wr = 0; l1_wr = 0;
                 #0.5 clk = 1'b1; 
             
-                ///// Weight and Activation load from SRAM and accumulate ////
-                l0_rd = 1;
-                l0_wr = 1; l1_wr = 1;
-                WEN_xmem = 1; CEN_xmem = 0;
-                #0.5 clk = 1'b1; 
-
+                ///// Weight and Activation load from l0 & l1 and accumulate ////
+                #0.5 clk = 1'b0; l0_rd = 1; 
+                #0.5 clk = 1'b1; //Need one cycle for L0 to propogate signal to first column
                 for(i = 0; i < len_kij + col + row; i=i+1) begin // compute 
                     #0.5 clk = 1'b0;
                     if(i < len_kij) begin 
@@ -387,7 +399,6 @@ initial begin
   error = 0;
 
   $display("############ Verification Start during accumulation #############"); 
-  // RIGHT NOW, THE ADDRESS BUFFERING IS WEIRD AS SHIT. WILL SHIFT DELAY TO THE OFIFO IDEALLY.
   #0.5 clk = 1'b0; 
   #0.5 clk = 1'b1; 
   #0.5 clk = 1'b0; 
