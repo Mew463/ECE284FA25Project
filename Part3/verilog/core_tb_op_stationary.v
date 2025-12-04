@@ -45,8 +45,6 @@ reg pass_psum_q = 0;
 reg sfu_passthrough_q = 0;
 reg sfu_passthrough;
 
-reg ofifo_wr;
-
 reg REN_pmem_q = 0;
 reg REN_pmem;
 
@@ -62,7 +60,8 @@ reg ofifo_rd;
 reg l0_rd;
 reg l0_wr; // l0 for activation
 reg l1_wr; // l1 for weight (output stationary)
-reg CEN_pmem, WEN_pmem, A_pmem;
+reg CEN_pmem, WEN_pmem;
+reg [10:0] A_pmem = 0;
 reg output_stationary = 1;
 //weight stationary instructions
 reg execute;
@@ -212,7 +211,6 @@ initial begin
     WEN_xmem = 1;
     A_xmem   = 0;
     ofifo_rd = 0;
-    ofifo_wr = 0;
     ififo_wr = 0;
     ififo_rd = 0;
     l0_rd    = 0;
@@ -258,10 +256,10 @@ initial begin
     if(output_stationary) begin
         for (t=0; t<len_kij*len_onij/2; t=t+1) begin  // 9*8 = 576 preprocessed values are needed when only half of o/c 
             #0.5 clk = 1'b0;  x_scan_file = $fscanf(x_file,"%32b", D_xmem); // Load the activations (inputs) into core.v
-            if (x_scan_file == 0)
-                $display("ERROR: fscanf failed for input activations line=%0d", t);
-            else
-                $display("SUCCESS: read %b", D_xmem);
+            // if (x_scan_file == 0)
+            //     $display("ERROR: fscanf failed for input activations line=%0d", t);
+            // else
+            //     $display("SUCCESS: read %b", D_xmem);
 
             /* ALPHA: Formal Intensive Verification */
             // act_memory[t] = $unsigned($random); // Loads arbitrary 32 bitstream 
@@ -308,10 +306,10 @@ initial begin
         A_xmem = 10'b1001000000; //starting at 576 (weight)
         for (t=0; t<len_kij*len_onij/2; t=t+1) begin  // 9*8  576 preprocessed values are needed when only half of o/c 
             #0.5 clk = 1'b0;  w_scan_file = $fscanf(w_file,"%32b", D_xmem); 
-            if (w_scan_file == 0)
-                $display("ERROR: fscanf failed for weights line=%0d", t);
-            else
-                $display("SUCCESS: read %b", D_xmem);
+            // if (w_scan_file == 0)
+            //     $display("ERROR: fscanf failed for weights line=%0d", t);
+            // else
+            //     $display("SUCCESS: read %b", D_xmem);
             WEN_xmem = 0; CEN_xmem = 0; //write to SRAM
             if (t>0) A_xmem = A_xmem + 1; 
             #0.5 clk = 1'b1;   
@@ -366,27 +364,29 @@ initial begin
                 
         end
     
+    
+
     //////// Finished accumulation, Sending Signal to output to OFIFO////
     #0.5 clk = 1'b0; 
-    recall_psum = 1;
-    ofifo_wr = 1; // Write to OFIFO
+    recall_psum = 1; // MAC -> OFIFO 
     sfu_passthrough = 1; // Enable passthrough in SFP
+    A_pmem = 8;
     #0.5 clk = 1'b1;
 
-    #0.5 clk = 1'b0; 
-    ofifo_rd = 1;
-    pass_psum = 1; recall_psum = 0;
-    A_pmem = 7;
-    #0.5 clk = 1'b1;
+    // #0.5 clk = 1'b0; // OFIFO -> PSUM_SRAM
+    
+    // #0.5 clk = 1'b1;
 
-    for (i = 0; i < col; i++) begin // Hopefully data is ready to be written straight to PMEM at this point
+    for (i = 0; i < row+1; i++) begin // Hopefully data is ready to be written straight to PMEM at this point
         #0.5 clk = 1'b0; 
+        pass_psum = 1; recall_psum = 0; // ofifo_wr = 1 because of pass_psum
+        ofifo_rd = 1;
         A_pmem = A_pmem - 1;
         CEN_pmem = 0; WEN_pmem = 1; // Write address delayed by one clock cycle 
         #0.5 clk = 1'b1;
     end
 
-    CEN_pmem = 1; // Disable
+    CEN_pmem = 1; WEN_pmem = 0; // Disable
 
 
     ////////// Accumulation /////////
@@ -406,6 +406,8 @@ initial begin
   for (i=0; i<len_onij/2; i=i+1) begin 
     CEN_pmem = 0;
     A_pmem = i;
+    sfu_passthrough = 0;
+    acc = 0;
     #0.5 clk = 1'b1; #0.5 clk = 1'b0; 
     out_scan_file = $fscanf(out_file,"%128b", answer); // reading from out file to answer
     if (sfp_out == answer)
@@ -416,6 +418,13 @@ initial begin
       $display("answer: %128b", answer);
       error = error + 1;
     end
+  end
+  if (error == 0) begin
+  	$display("############ No error detected ##############"); 
+  	$display("########### Part 3 Completed !! ############"); 
+  end
+  else begin
+    $display("############ %d errors detected. ############", error);
   end
 
 

@@ -53,8 +53,8 @@ module core(clk, inst, ofifo_valid, D_xmem, sfp_out, reset);
     wire ofifo_full, ofifo_ready, ofifo_valid;
     wire [col-1:0] mac_ofifo_valid_bridge, ofifo_wr;
 
-    assign ofifo_wr = output_stationary ? recall_psum || pass_psum :
-                     mac_ofifo_valid_bridge;   
+    assign ofifo_wr = output_stationary ? (pass_psum ? {(col){1'b1}} : {(col){1'b0}})
+                    : mac_ofifo_valid_bridge;   
 
 
 
@@ -63,7 +63,7 @@ module core(clk, inst, ofifo_valid, D_xmem, sfp_out, reset);
         .in(out_s),
         .out(ofifo_out),
         .rd(ofifo_rd),
-        .wr(mac_ofifo_valid_bridge), // <== change this to ofifo_wr
+        .wr(ofifo_wr), // <== change this to ofifo_wr
         .o_full(ofifo_full),
         .reset(reset),
         .o_ready(ofifo_ready),
