@@ -23,6 +23,8 @@ module core(clk, inst, ofifo_valid, D_xmem, sfp_out, reset);
     // Expand the instruction bus from the core_tb
     wire debug = inst[63];
     // wire[1:0] actFunc = inst_q[37:36];
+    wire pass_psum = inst[39];
+    wire recall_psum = inst[38];
     wire l1_wr    = inst[37];
     wire output_stationary = inst[36];
     wire REN_pmem = inst[35];
