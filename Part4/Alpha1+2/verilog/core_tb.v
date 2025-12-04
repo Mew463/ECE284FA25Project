@@ -63,11 +63,6 @@ wire ofifo_valid;
 wire [col*psum_bw-1:0] sfp_out;
 reg [col-1:0] psum_sram_ptr;
 
-/* ALPHA: Formal Intensive Verification */
-// reg [bw*row-1:0] act_memory [0:len_nij-1];
-// reg [bw*row-1:0] wgt_memory [0:len_kij-1];
-// reg [psum_bw*col-1:0] golden_output; // could also just fill `answer
-
 integer x_file, x_scan_file ; // file_handler
 integer w_file, w_scan_file ; // file_handler
 integer acc_file, acc_scan_file ; // file_handler
@@ -164,21 +159,8 @@ function [31:0] onij;
     end
 endfunction
 
-/* ALPHA: Formal Intensive Verification */
-// task calculateCNN; 
-//   input [bw*row-1:0] input_act_mem [0:len_kij-1];
-//   input [bw*row-1:0] input_wgt_mem [0:len_kij-1];
-
-//   output [psum_bw*col-1:0] golden_output;
-
-//   reg [psum_bw-1:0] temp_psum [0:col-1];
-//   integer act_idx;
-//   integer wgt_idx;
-// endtask
-
-
 initial begin 
-  acc      = 0; //totally making this up with accumulate
+  acc      = 0; 
   D_xmem   = 0;
   CEN_xmem = 1;
   WEN_xmem = 1;
@@ -205,7 +187,7 @@ initial begin
   x_scan_file = $fscanf(x_file,"%s", captured_data);
   x_scan_file = $fscanf(x_file,"%s", captured_data);
 
-  //////// Reset /////////
+  //#################  Reset ################# //
   #0.5 clk = 1'b0;   reset = 1;
   #0.5 clk = 1'b1; 
 
@@ -221,12 +203,9 @@ initial begin
   #0.5 clk = 1'b1;   
   /////////////////////////
 
-  /////// Activation data writing to memory ///////
+  // #################  Activation data writing to memory ################# //
   for (t=0; t<len_nij; t=t+1) begin  
     #0.5 clk = 1'b0;  x_scan_file = $fscanf(x_file,"%32b", D_xmem); // Load the activations (inputs) into core.v
-    /* ALPHA: Formal Intensive Verification */
-    // act_memory[t] = $unsigned($random); // Loads arbitrary 32 bitstream 
-    // D_xmem = act_memory[t]; 
     WEN_xmem = 0; CEN_xmem = 0; 
     if (t>0) A_xmem = A_xmem + 1;
     #0.5 clk = 1'b1;   
@@ -238,7 +217,7 @@ initial begin
   $fclose(x_file);
   /////////////////////////////////////////////////
 
-
+  // #################  Load in weight files #################  //
   for (kij=0; kij<9; kij=kij+1) begin    // kij loop
 
     // case(kij)
@@ -285,17 +264,13 @@ initial begin
     #0.5 clk = 1'b0;   
     #0.5 clk = 1'b1;   
 
-    /////// Kernel data writing to memory ///////
+    //################# Kernel data writing to memory ################# //
     // Load the weights into core.v's ACTIVATION_WEIGHTS_sram
 
     A_xmem = 11'b10000000000; // Starting at address 1024 the weights are loaded
 
     for (t=0; t<col; t=t+1) begin  
       #0.5 clk = 1'b0;  w_scan_file = $fscanf(w_file,"%32b", D_xmem);  
-      /* ALPHA: Formal Intensive Verification */ 
-      // wgt_memory[kij] = $unsigned($random); // Loads arbitrary 32 bitstream 
-      // D_xmem = wgt_memory[kij]; 
-
       WEN_xmem = 0; CEN_xmem = 0; if (t>0) A_xmem = A_xmem + 1; 
       #0.5 clk = 1'b1;  
     end
@@ -303,7 +278,7 @@ initial begin
     #0.5 clk = 1'b0;  WEN_xmem = 1;  CEN_xmem = 1; A_xmem = 0;
     #0.5 clk = 1'b1; 
 
-    /////// Kernel data writing to L0 /////// 
+    // #################  Kernel data writing to L0 ################# // 
     // Make ACTIVATION_WEIGHTS_sram give the weights to the L0
     A_xmem = 11'b10000000000; // Since the weights are loaded at address 1024, make sure we start there
     #0.5 clk = 1'b0; WEN_xmem = 1; CEN_xmem = 0;
@@ -315,7 +290,7 @@ initial begin
     #0.5 clk = 1'b0;  WEN_xmem = 1;  CEN_xmem = 1; A_xmem = 0; l0_wr = 0;// CHIP UNENABLE
     #0.5 clk = 1'b1; 
 
-    /////// Kernel loading to PEs ///////
+    // ################# Kernel loading to PEs ################# //
     // L0 pass the weights to PE
     #0.5 clk = 1'b0; l0_rd = 1; 
     #0.5 clk = 1'b1; //Need one cycle for L0 to propogate signal to first column
@@ -335,9 +310,7 @@ initial begin
     end
     /////////////////////////////////////
 
-
-
-    /////// Whole Activation processing cycle ///////
+    // ################## Whole Activation processing cycle ######################/
     /*
     1) SRAM(activation) -> L0
     2) L0 -> PE (execute)
@@ -405,6 +378,8 @@ initial begin
     #0.5 clk = 1'b0;
     #0.5 clk = 1'b1; #0.5 clk = 1'b0; #0.5 clk = 1'b1; #0.5 clk = 1'b0; //TWO CLOCK CYCLES TO HIT THE LAST NIJ VALUES
     CEN_xmem = 1; // Disable SRAM weights/activation
+
+    // ########################### IDLE STATE   ########################### //
     CEN_pmem = 1; // Disable SRAM psum 
     WEN_pmem = 0;
     acc = 0;
@@ -419,10 +394,8 @@ initial begin
   end  // end of kij loop
 
 
-  ////////// Accumulation /////////
+  ////////// ACTIVATION FUNCTION /////////
 
-  // NON-RELU VER
-  // out_file = $fopen("out.txt", "r");
 
   /* RELU AND ALPHA: LEAKY_RELU TEST*/
   #0.5 clk = 1'b0; 
@@ -434,8 +407,8 @@ initial begin
     WEN_pmem = 1;
     sfu_passthrough = 0;
     acc = 0;
-    // actFunc = 2'b00; // normal ReLU
-    actFunc = 2'b01;    // leaky ReLU
+    actFunc = 2'b00; // normal ReLU
+    // actFunc = 2'b01;    // leaky ReLU
     #0.5 clk = 1'b1;  
   end
   #0.5 clk = 1'b0;
@@ -444,10 +417,16 @@ initial begin
   acc = 0;
 
   actFunc[1] = 1;
+
+  // #################  SELECT OUTPUT FILE ################# //
+  // NON-RELU VER
+  // out_file = $fopen("out.txt", "r");
+  
   // ReLU VER 
-  // out_file = $fopen("out_relu.txt", "r");    
+  out_file = $fopen("out_relu.txt", "r");
+      
   // Leaky ReLU Ver
-  out_file = $fopen("out_leaky_relu.txt", "r");  
+  // out_file = $fopen("out_leaky_relu.txt", "r");  
 
   // Following three lines are to remove the first three comment lines of the file
   out_scan_file = $fscanf(out_file,"%s", answer); 
@@ -456,8 +435,7 @@ initial begin
 
   error = 0;
 
-  $display("############ Verification Start during accumulation #############"); 
-  // RIGHT NOW, THE ADDRESS BUFFERING IS WEIRD AS SHIT. WILL SHIFT DELAY TO THE OFIFO IDEALLY.
+  $display("############ Verification Start #############"); 
   #0.5 clk = 1'b0; 
   #0.5 clk = 1'b1; 
   #0.5 clk = 1'b0; 
@@ -474,33 +452,7 @@ initial begin
       $display("answer: %128b", answer);
       error = error + 1;
       
-    end
-   
- 
-    // #0.5 clk = 1'b0; reset = 1;
-    // #0.5 clk = 1'b1;  
-    // #0.5 clk = 1'b0; reset = 0; 
-    // #0.5 clk = 1'b1;  
-    
-    // acc_file = $fopen("activation_tile0.txt", "r");
-
-    //   // Following three lines are to remove the first three comment lines of the file
-    //   out_scan_file = $fscanf(out_file,"%s", answer); 
-    //   out_scan_file = $fscanf(out_file,"%s", answer); 
-    //   out_scan_file = $fscanf(out_file,"%s", answer); 
-
-    // for (j=0; j<len_kij+1; j=j+1) begin 
-
-    //   #0.5 clk = 1'b0;   
-    //     if (j<len_kij) begin CEN_pmem = 0; WEN_pmem = 1; acc_scan_file = $fscanf(acc_file,"%11b", A_pmem); end
-    //                    else  begin CEN_pmem = 1; WEN_pmem = 1; end
-
-    //     if (j>0)  acc = 1;  
-    //   #0.5 clk = 1'b1;   
-    // end
-
-    // #0.5 clk = 1'b0; acc = 0;
-    // #0.5 clk = 1'b1; 
+    end 
   end
 
 
