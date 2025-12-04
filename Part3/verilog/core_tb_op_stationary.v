@@ -255,6 +255,9 @@ initial begin
 
     //output stationary version //
     if(output_stationary) begin
+        output_stationary = 1;
+
+        
         for (t=0; t<len_kij*len_onij/2; t=t+1) begin  // 9*8 = 576 preprocessed values are needed when only half of o/c 
             #0.5 clk = 1'b0;  x_scan_file = $fscanf(x_file,"%32b", D_xmem); // Load the activations (inputs) into core.v
             // if (x_scan_file == 0)
@@ -407,9 +410,9 @@ initial begin
             #0.5 clk = 1'b1; #0.5 clk = 1'b0; 
             out_scan_file = $fscanf(out_file,"%128b", answer); // reading from out file to answer
             if (sfp_out == answer)
-            $display("%2d-th output featuremap Data matched! :D", i); 
+            $display("%2d-th output featuremap Data matched! output stationary :D", i); 
             else begin
-            $display("%2d-th output featuremap Data ERROR!!", i); 
+            $display("%2d-th output featuremap Data ERROR!! output stationary", i); 
             $display("sfpout: %128b", sfp_out);
             $display("answer: %128b", answer);
             error = error + 1;
@@ -417,7 +420,7 @@ initial begin
         end
         if (error == 0) begin
             $display("############ No error detected ##############"); 
-            $display("########### Part 3 Completed !! ############"); 
+            $display("########### Part 3 output stationary Completed !! ############"); 
         end
         else begin
             $display("############ %d errors detected. ############", error);
@@ -430,6 +433,8 @@ initial begin
     //weight stationary version //
     //weight stationary version //
     //weight stationary version // 
+
+    output_stationary = 0;
     //////// Kernel loading /////
     /////// Whole Activation processing cycle -- weight stationary///////
     /*
@@ -711,9 +716,9 @@ initial begin
         #0.5 clk = 1'b1; #0.5 clk = 1'b0; 
         out_scan_file = $fscanf(out_file,"%128b", answer); // reading from out file to answer
         if (sfp_out == answer)
-        $display("%2d-th output featuremap Data matched! :D", i); 
+        $display("%2d-th output featuremap Data matched! :D weight stationary", i); 
         else begin
-        $display("%2d-th output featuremap Data ERROR!!", i); 
+        $display("%2d-th output featuremap Data ERROR!! weight stationary", i); 
         $display("sfpout: %128b", sfp_out);
         $display("answer: %128b", answer);
         error = error + 1;
@@ -725,7 +730,7 @@ initial begin
 
     if (error == 0) begin
         $display("############ No error detected ##############"); 
-        $display("########### Project Completed !! ############"); 
+        $display("########### Project Completed !! weight stationary ############"); 
 
     end else begin
         $display("############ %d errors detected. ############", error);
