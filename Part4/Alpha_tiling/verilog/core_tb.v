@@ -258,8 +258,8 @@ initial begin
         case({oc_group, ic_group}) 
           2'b00: w_file_name = "tile_data/weight_tile0_octile0_ictile0.txt";
           2'b01: w_file_name = "tile_data/weight_tile1_octile0_ictile1.txt";
-          2'b10: w_file_name = "tile_data/weight_tile0_octile0_ictile0.txt";
-          2'b11: w_file_name = "tile_data/weight_tile1_octile0_ictile1.txt";
+          2'b10: w_file_name = "tile_data/weight_tile1_octile0_ictile1.txt";
+          2'b11: w_file_name = "tile_data/weight_tile0_octile0_ictile0.txt";
         endcase
 
         w_file = $fopen(w_file_name, "r");
