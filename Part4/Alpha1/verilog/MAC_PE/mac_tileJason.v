@@ -24,10 +24,12 @@ reg [bw-1:0] b_q; // Weight
 reg [psum_bw-1:0] c_q; // Psum
 reg load_ready_q;
 wire[psum_bw-1:0] mac_out;
+reg [bw-1:0] in_w_reg;
+reg [psum_bw-1:0] mac_reg;
 
-assign out_e = a_q;
+assign out_e = zero ? 0 : a_q;
 assign inst_e = inst_q;
-assign out_s = zero ? in_n : mac_out; // If `zero`, just output the input psum
+assign out_s = mac_out; // If `zero`, just output the input psum
 
 mac #(.bw(bw), .psum_bw(psum_bw)) mac_instance (
     .a(a_q), 
@@ -37,6 +39,8 @@ mac #(.bw(bw), .psum_bw(psum_bw)) mac_instance (
 ); 
 
 always @(posedge clk)begin
+    // in_w_reg <= in_w;
+    // mac_reg <= in_n;
     if(reset)begin
         inst_q <= 0;  
         load_ready_q <= 1;
@@ -44,15 +48,17 @@ always @(posedge clk)begin
         b_q <= 0;
         c_q <= 0;
     end
-    else if(!zero)begin
-        c_q <= in_n;
+    else begin
         inst_q[1] <= inst_w[1];
-        if(inst_w[0] || inst_w[1])begin
-            a_q <= in_w;
-        end
-        if(inst_w[0] && load_ready_q)begin
-            b_q <= in_w;
-            load_ready_q <= 0;
+        c_q <= in_n;
+        if(1)begin
+            if(inst_w[0] || inst_w[1])begin
+                a_q <= in_w;
+            end
+            if(inst_w[0] && load_ready_q)begin
+                b_q <= in_w;
+                load_ready_q <= 0;
+            end
         end
     end
     if(!load_ready_q)begin

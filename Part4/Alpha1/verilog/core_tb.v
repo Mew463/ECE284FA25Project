@@ -396,6 +396,10 @@ initial begin
           $timeformat(-9, 2, " ns", 20); // Unit in ns (-9), 2 decimal places, " ns" suffix, field width 20 
           $display("kij = %d, sfpout: %16b sfpout: %d time: %t", kij, sfp_out[15:0],sfp_out[15:0], $time);
         end
+        if (t == 34 && kij == 0) begin
+            $display("t=%d: L0 output = %h", t, core_instance.l0_mac_bridge);
+            $display("t=%d: MAC out_s = %h", t, core_instance.out_s);
+        end
         // $timeformat(-9, 2, " ns", 20); // Unit in ns (-9), 2 decimal places, " ns" suffix, field width 20 
         // $display("t: %d, kij = %d, sfpout: %16b sfpout: %d time: %t", t, kij, sfp_out[15:0],sfp_out[15:0], $time);          
       end
