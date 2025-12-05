@@ -336,7 +336,7 @@ initial begin
     #0.5 clk = 1'b1; 
     skippedFirst = 0;
     nij = -1;
-    for (t=0; t<len_nij + col + row; t=t+1) begin  // 36 + 8 + 8 = 52
+    for (t=0; t<len_nij + col + row+1; t=t+1) begin  // 36 + 8 + 8 = 52
       #0.5 clk = 1'b0; 
       if(t<len_nij) begin
 
@@ -405,20 +405,21 @@ initial begin
 
   
   /* RELU AND ALPHA: LEAKY_RELU TEST*/
-  #0.5 clk = 1'b0; 
-  #0.5 clk = 1'b1; 
-  #0.5 clk = 1'b0;
-  for (i=0; i<len_onij; i=i+1) begin 
-    CEN_pmem = 0;
-    A_pmem = i;
-    WEN_pmem = 1;
-    sfu_passthrough = 0;
-    acc = 0;
-    #0.5 clk = 1'b1;  
-  end
-  #0.5 clk = 1'b0;
-  CEN_pmem = 1; // Disable SRAM psum 
-  WEN_pmem = 0;
+  // #0.5 clk = 1'b0; 
+  // #0.5 clk = 1'b1; 
+  // #0.5 clk = 1'b0;
+  // for (i=0; i<len_onij; i=i+1) begin 
+  //   CEN_pmem = 0;
+  //   A_pmem = i;
+  //   WEN_pmem = 1;
+  //   sfu_passthrough = 0;
+  //   relu = 1;
+  //   acc = 0;
+  //   #0.5 clk = 1'b1;  
+  // end
+  // #0.5 clk = 1'b0;
+  // CEN_pmem = 1; // Disable SRAM psum 
+  // WEN_pmem = 0;
   // #################  SELECT OUTPUT FILE ################# //
   // out_file = $fopen("out.txt", "r");  
 
@@ -436,7 +437,9 @@ initial begin
   #0.5 clk = 1'b0; 
   #0.5 clk = 1'b1; 
   #0.5 clk = 1'b0; 
+
   for (i=0; i<len_onij; i=i+1) begin 
+    relu = 1;
     CEN_pmem = 0;
     A_pmem = i;
     sfu_passthrough = 0;
