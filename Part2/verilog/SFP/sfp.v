@@ -18,7 +18,7 @@ module sfp(psum_in, ofifo_in, accum, sfp_out, passthrough);
 assign sfp_out =
     passthrough  ? ofifo_in :                   // passthrough path
     accum        ? (psum_in + ofifo_in) :       // accumulation
-                   (psum_in < 0 ? 0 : psum_in); // ReLU
+                   (psum_in[psum_bw-1] == 1 ? 0 : psum_in); // ReLU
 //  accum        ? (psum_in + ofifo_in) :
 //  actFunc[0]   ?  (psum_in < 0 ? 0 : psum_in) : // ReLU
 //                   (psum_in < 0 ? psum_in >> 6 : psum_in); Leaky ReLU with alpha = 0.015625 

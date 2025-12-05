@@ -520,10 +520,10 @@ initial begin
 
   ////////// Accumulation /////////
   if (oc_group == 0) begin
-    out_file = $fopen("part2a_vals/out_octile0.txt", "r");  
+    out_file = $fopen("part2a_vals/out_octile0_relu.txt", "r");  
   end
   if (oc_group == 1) begin
-    out_file = $fopen("part2a_vals/out_octile1.txt", "r");  
+    out_file = $fopen("part2a_vals/out_octile1_relu.txt", "r");  
   end
 
   // Following three lines are to remove the first three comment lines of the file
@@ -814,7 +814,7 @@ initial begin
 
 
   ////////// Accumulation /////////
-  out_file = $fopen("part2b_vals/out.txt", "r");  
+  out_file = $fopen("part2b_vals/out_relu.txt", "r");  
 
   // Following three lines are to remove the first three comment lines of the file
   out_scan_file = $fscanf(out_file,"%s", answer); 
