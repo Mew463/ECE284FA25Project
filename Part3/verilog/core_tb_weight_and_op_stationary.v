@@ -275,10 +275,6 @@ initial begin
                 //     $display("ERROR: fscanf failed for input activations line=%0d", t);
                 // else
                 //     $display("SUCCESS: read %b", D_xmem);
-
-                /* ALPHA: Formal Intensive Verification */
-                // act_memory[t] = $unsigned($random); // Loads arbitrary 32 bitstream 
-                // D_xmem = act_memory[t]; 
                 WEN_xmem = 0; CEN_xmem = 0; 
                 if (t>0)  A_xmem = A_xmem +1; 
                 #0.5 clk = 1'b1;   
@@ -381,7 +377,8 @@ initial begin
             #0.5 clk = 1'b0; 
             recall_psum = 1; // MAC -> OFIFO 
             sfu_passthrough = 1; // Enable passthrough in SFP
-            relu = 1; //start doing relu on output
+            // relu = 1; //start doing relu on output
+            relu = 0;
             A_pmem = 8;
             #0.5 clk = 1'b1;
 
@@ -400,8 +397,8 @@ initial begin
 
             CEN_pmem = 1; WEN_pmem = 0; relu = 0; sfu_passthrough = 0; acc = 0;// Disable
 
-            out_file = $fopen("output_stationary_data/out_relu.txt", "r");  
-            // out_file = $fopen("out.txt", "r");  
+            // out_file = $fopen("output_stationary_data/out_relu.txt", "r");  
+            out_file = $fopen("out.txt", "r");  
 
             // Following three lines are to remove the first three comment lines of the file
             out_scan_file = $fscanf(out_file,"%s", answer); 
@@ -432,6 +429,7 @@ initial begin
                 error = error + 1;
                 end
             end
+                $fclose(out_scan_file);
             if (error == 0) begin
                 $display("############ No error detected ##############"); 
                 $display("########### Part 3 output stationary Completed !! ############"); 
@@ -459,18 +457,6 @@ initial begin
         4) Repeat
         5) Store output in PSUM SRAM
         */
-        
-        /* ALPHA: Formal Intensive Verification */
-        // task calculateCNN; 
-        //   input [bw*row-1:0] input_act_mem [0:len_kij-1];
-        //   input [bw*row-1:0] input_wgt_mem [0:len_kij-1];
-
-        //   output [psum_bw*col-1:0] golden_output;
-
-        //   reg [psum_bw-1:0] temp_psum [0:col-1];
-        //   integer act_idx;
-        //   integer wgt_idx;
-        // endtask
         acc      = 0; //totally making this up with accumulate
         D_xmem   = 0;
         CEN_xmem = 1;
@@ -516,9 +502,6 @@ initial begin
         /////// Activation data writing to memory ///////
         for (t=0; t<len_nij; t=t+1) begin  
             #0.5 clk = 1'b0;  x_scan_file = $fscanf(x_file,"%32b", D_xmem); // Load the activations (inputs) into core.v
-            /* ALPHA: Formal Intensive Verification */
-            // act_memory[t] = $unsigned($random); // Loads arbitrary 32 bitstream 
-            // D_xmem = act_memory[t]; 
             WEN_xmem = 0; CEN_xmem = 0; 
             if (t>0) A_xmem = A_xmem + 1;
             #0.5 clk = 1'b1;   
@@ -585,10 +568,6 @@ initial begin
 
             for (t=0; t<col; t=t+1) begin  
                 #0.5 clk = 1'b0;  w_scan_file = $fscanf(w_file,"%32b", D_xmem);  
-                /* ALPHA: Formal Intensive Verification */ 
-                // wgt_memory[kij] = $unsigned($random); // Loads arbitrary 32 bitstream 
-                // D_xmem = wgt_memory[kij]; 
-
                 WEN_xmem = 0; CEN_xmem = 0; if (t>0) A_xmem = A_xmem + 1; 
                 #0.5 clk = 1'b1;  
             end
@@ -748,6 +727,7 @@ initial begin
         end
 
         answer = 127'b0;
+        $fclose(out_scan_file);
 
 
         if (error == 0) begin
