@@ -1,4 +1,5 @@
-# Estimated power savings assuming 17.36% (100/576) weight sparsity.
+# Alpha 1: Input Sparsity Controller
+### Estimated power savings assuming 17.36% (100/576) weight sparsity.
 
 ### MAC unit
 * We have about 288 activations ( 36 rows x 8 columns)
