@@ -255,12 +255,17 @@ initial begin
 
       $fclose(x_file);
 
-        case({oc_group, ic_group}) 
+        case({oc_group[0], ic_group[0]}) 
           2'b00: w_file_name = "tile_data/weight_tile0_octile0_ictile0.txt";
           2'b01: w_file_name = "tile_data/weight_tile1_octile0_ictile1.txt";
-          2'b10: w_file_name = "tile_data/weight_tile1_octile0_ictile1.txt";
-          2'b11: w_file_name = "tile_data/weight_tile0_octile0_ictile0.txt";
+          2'b10: w_file_name = "tile_data/weight_tile2_octile1_ictile0.txt";
+          2'b11: w_file_name = "tile_data/weight_tile3_octile1_ictile1.txt";
         endcase
+
+        // case({ic_group}) 
+        //   1'b0: w_file_name = "tile_data/weight_tile0_octile0_ictile0.txt";
+        //   1'b1: w_file_name = "tile_data/weight_tile1_octile0_ictile1.txt";
+        // endcase
 
         w_file = $fopen(w_file_name, "r");
         // Following three lines are to remove the first three comment lines of the file
@@ -438,7 +443,7 @@ initial begin
             out_file = $fopen("tile_data/out_octile0_relu.txt", "r");  
           end
           if (oc_group == 1) begin
-            out_file = $fopen("tile_data/out_octile0_relu.txt", "r");  
+            out_file = $fopen("tile_data/out_octile1_relu.txt", "r");  
           end
 
           // out_file = $fopen("data/out_relu.txt", "r"); 
