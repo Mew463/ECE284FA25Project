@@ -43,9 +43,10 @@ reg sfu_passthrough_q = 0;
 reg sfu_passthrough;
 reg REN_pmem_q = 0;
 reg REN_pmem;
-reg [1:0] actFunc_q = 0;
-reg [1:0] actFunc;
+// reg [1:0] actFunc_q = 0;
+// reg [1:0] actFunc;
 reg debug = 0;
+reg relu = 0;
 
 reg [bw*row-1:0] D_xmem;
 reg [psum_bw*col-1:0] answer;
@@ -88,7 +89,8 @@ integer error;
 // assign inst_q[1]   = execute_q; 
 // assign inst_q[0]   = load_q; 
 assign inst_q[63] = debug; // Debug signal for psum_sram
-assign inst_q[37:36] = actFunc;
+// assign inst_q[37:36] = actFunc;
+assign inst_q[45] = relu;
 assign inst_q[35] = REN_pmem;
 assign inst_q[34] = sfu_passthrough;
 assign inst_q[33] = acc;
@@ -116,7 +118,30 @@ core  #(.bw(bw), .col(col), .row(row)) core_instance (
 	.ofifo_valid(ofifo_valid),
   .D_xmem(D_xmem), 
   .sfp_out(sfp_out), 
-	.reset(reset));  
+	.reset(reset)); 
+
+initial begin
+  $dumpfile("core_tb.vcd");
+  $dumpvars(0,core_tb);
+  // dump JUST the memory explicitly
+  $dumpvars(1, core_instance.PSUM_sram.memory[0]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[1]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[2]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[3]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[4]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[5]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[6]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[7]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[8]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[9]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[10]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[11]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[12]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[13]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[14]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[15]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[16]);
+end 
 
 function [31:0] onij;
     input [31:0] nij;
@@ -136,8 +161,9 @@ function [31:0] onij;
     end
 endfunction
 
+
 initial begin 
-  acc      = 0; 
+  acc      = 0; //totally making this up with accumulate
   D_xmem   = 0;
   CEN_xmem = 1;
   WEN_xmem = 1;
@@ -153,7 +179,7 @@ initial begin
   WEN_pmem = 0;
   psum_sram_ptr = 0;
   sfu_passthrough = 0;
-  actFunc = 2'b00;
+  relu = 0;
 
   // $dumpfile("core_tb.vcd");
   // $dumpvars(0,core_tb);
@@ -165,7 +191,7 @@ initial begin
   x_scan_file = $fscanf(x_file,"%s", captured_data);
   x_scan_file = $fscanf(x_file,"%s", captured_data);
 
-  //#################  Reset ################# //
+  //////// Reset /////////
   #0.5 clk = 1'b0;   reset = 1;
   #0.5 clk = 1'b1; 
 
@@ -181,9 +207,10 @@ initial begin
   #0.5 clk = 1'b1;   
   /////////////////////////
 
-  // #################  Activation data writing to memory ################# //
+  /////// Activation data writing to memory ///////
   for (t=0; t<len_nij; t=t+1) begin  
     #0.5 clk = 1'b0;  x_scan_file = $fscanf(x_file,"%32b", D_xmem); // Load the activations (inputs) into core.v
+
     WEN_xmem = 0; CEN_xmem = 0; 
     if (t>0) A_xmem = A_xmem + 1;
     #0.5 clk = 1'b1;   
@@ -195,7 +222,7 @@ initial begin
   $fclose(x_file);
   /////////////////////////////////////////////////
 
-  // #################  Load in weight files #################  //
+
   for (kij=0; kij<9; kij=kij+1) begin    // kij loop
 
     // case(kij)
@@ -242,13 +269,14 @@ initial begin
     #0.5 clk = 1'b0;   
     #0.5 clk = 1'b1;   
 
-    //################# Kernel data writing to memory ################# //
+    /////// Kernel data writing to memory ///////
     // Load the weights into core.v's ACTIVATION_WEIGHTS_sram
 
     A_xmem = 11'b10000000000; // Starting at address 1024 the weights are loaded
 
     for (t=0; t<col; t=t+1) begin  
       #0.5 clk = 1'b0;  w_scan_file = $fscanf(w_file,"%32b", D_xmem);  
+
       WEN_xmem = 0; CEN_xmem = 0; if (t>0) A_xmem = A_xmem + 1; 
       #0.5 clk = 1'b1;  
     end
@@ -256,7 +284,7 @@ initial begin
     #0.5 clk = 1'b0;  WEN_xmem = 1;  CEN_xmem = 1; A_xmem = 0;
     #0.5 clk = 1'b1; 
 
-    // #################  Kernel data writing to L0 ################# // 
+    /////// Kernel data writing to L0 /////// 
     // Make ACTIVATION_WEIGHTS_sram give the weights to the L0
     A_xmem = 11'b10000000000; // Since the weights are loaded at address 1024, make sure we start there
     #0.5 clk = 1'b0; WEN_xmem = 1; CEN_xmem = 0;
@@ -268,7 +296,7 @@ initial begin
     #0.5 clk = 1'b0;  WEN_xmem = 1;  CEN_xmem = 1; A_xmem = 0; l0_wr = 0;// CHIP UNENABLE
     #0.5 clk = 1'b1; 
 
-    // ################# Kernel loading to PEs ################# //
+    /////// Kernel loading to PEs ///////
     // L0 pass the weights to PE
     #0.5 clk = 1'b0; l0_rd = 1; 
     #0.5 clk = 1'b1; //Need one cycle for L0 to propogate signal to first column
@@ -288,7 +316,9 @@ initial begin
     end
     /////////////////////////////////////
 
-    // ################## Whole Activation processing cycle ######################/
+
+
+    /////// Whole Activation processing cycle ///////
     /*
     1) SRAM(activation) -> L0
     2) L0 -> PE (execute)
@@ -306,7 +336,7 @@ initial begin
     #0.5 clk = 1'b1; 
     skippedFirst = 0;
     nij = -1;
-    for (t=0; t<len_nij + col + row; t=t+1) begin  // 36 + 8 + 8 = 52
+    for (t=0; t<len_nij + col + row+1; t=t+1) begin  // 36 + 8 + 8 = 52
       #0.5 clk = 1'b0; 
       if(t<len_nij) begin
 
@@ -328,9 +358,12 @@ initial begin
         if (kij == 0) begin  
           sfu_passthrough = 1; // make SFU pass first KIJ index; ofifo goes to psum sram
           acc = 0;
-        end else begin
+        end else  begin
           sfu_passthrough = 0;
           acc = 1;
+        end 
+        if (kij == 8) begin
+          relu = 1; // Relu on the last in addition to accumulating
         end
         
         if(o_nij_index >= 0 && o_nij_index < 16) begin 
@@ -341,18 +374,25 @@ initial begin
         end else begin
           CEN_pmem = 1;
         end 
+        if (t == 34)begin 
+          // Last `t` before goes all X: all start at 18
+          // 0: 52, 1-2: 34, 3-5: 35; 6-8: 36
+          $timeformat(-9, 2, " ns", 20); // Unit in ns (-9), 2 decimal places, " ns" suffix, field width 20 
+          $display("kij = %d, sfpout: %16b sfpout: %d time: %t", kij, sfp_out[15:0], $signed(sfp_out[15:0]), $time);
+        end
+        // $timeformat(-9, 2, " ns", 20); // Unit in ns (-9), 2 decimal places, " ns" suffix, field width 20 
+        // $display("t: %d, kij = %d, sfpout: %16b sfpout: %d time: %t", t, kij, sfp_out[15:0],sfp_out[15:0], $time);          
       end
 
         #0.5 clk = 1'b1; 
     end
     #0.5 clk = 1'b0;
-    #0.5 clk = 1'b1; #0.5 clk = 1'b0; #0.5 clk = 1'b1; #0.5 clk = 1'b0; //TWO CLOCK CYCLES TO HIT THE LAST NIJ VALUES
+    #0.5 clk = 1'b1; #0.5 clk = 1'b0;  //TWO CLOCK CYCLES TO HIT THE LAST NIJ VALUES
     CEN_xmem = 1; // Disable SRAM weights/activation
-
-    // ########################### IDLE STATE   ########################### //
     CEN_pmem = 1; // Disable SRAM psum 
     WEN_pmem = 0;
     acc = 0;
+    relu = 0;
     l0_wr = 0; // Disable L0 writing
     l0_rd = 0; execute = 0; // Disable L0 and PE execute
     ofifo_rd = 0; // Disable ofifo reading
@@ -363,43 +403,28 @@ initial begin
 
   end  // end of kij loop
 
-
-  ////////// ACTIVATION FUNCTION /////////
-
-
-  /* RELU AND ALPHA: LEAKY_RELU TEST*/
-  #0.5 clk = 1'b0; 
-  #0.5 clk = 1'b1; 
-  #0.5 clk = 1'b0;
-  for (i=0; i<len_onij; i=i+1) begin 
-    #0.5 clk = 1'b0;
-    CEN_pmem = 0;
-    A_pmem = i;
-    WEN_pmem = 1;
-    sfu_passthrough = 0;
-    acc = 0;
-    //actFunc = 2'b00; // normal ReLU
-    actFunc = 2'b01;    // leaky ReLU
-    #0.5 clk = 1'b1; 
-  end
-  #0.5 clk = 1'b0;
-  #0.5 clk = 1'b1;
-  #0.5 clk = 1'b0;
-  CEN_pmem = 1; // Disable SRAM psum 
-  WEN_pmem = 0;
-  acc = 0;
-
-  actFunc[1] = 1;
-
-  // #################  SELECT OUTPUT FILE ################# //
-  // NON-RELU VER
-  out_file = $fopen("out.txt", "r");
   
-  // ReLU VER 
+  /* RELU AND ALPHA: LEAKY_RELU TEST*/
+  // #0.5 clk = 1'b0; 
+  // #0.5 clk = 1'b1; 
+  // #0.5 clk = 1'b0;
+  // for (i=0; i<len_onij; i=i+1) begin 
+  //   CEN_pmem = 0;
+  //   A_pmem = i;
+  //   WEN_pmem = 1;
+  //   sfu_passthrough = 0;
+  //   relu = 1;
+  //   acc = 0;
+  //   #0.5 clk = 1'b1;  
+  // end
+  // #0.5 clk = 1'b0;
+  // CEN_pmem = 1; // Disable SRAM psum 
+  // WEN_pmem = 0;
+  // #################  SELECT OUTPUT FILE ################# //
+  // out_file = $fopen("out.txt", "r");  
+
+   // ReLU VER 
   out_file = $fopen("out_relu.txt", "r");
-      
-  // Leaky ReLU Ver
-  out_file = $fopen("out_leaky_relu.txt", "r");  
 
   // Following three lines are to remove the first three comment lines of the file
   out_scan_file = $fscanf(out_file,"%s", answer); 
@@ -408,13 +433,15 @@ initial begin
 
   error = 0;
 
-  $display("############ Verification Start #############"); 
+  $display("############ Verification Start during accumulation #############"); 
   #0.5 clk = 1'b0; 
   #0.5 clk = 1'b1; 
   #0.5 clk = 1'b0; 
+
   for (i=0; i<len_onij; i=i+1) begin 
     CEN_pmem = 0;
     A_pmem = i;
+    sfu_passthrough = 0;
     #0.5 clk = 1'b1; #0.5 clk = 1'b0; 
     out_scan_file = $fscanf(out_file,"%128b", answer); // reading from out file to answer
     if (sfp_out == answer)
@@ -425,7 +452,33 @@ initial begin
       $display("answer: %128b", answer);
       error = error + 1;
       
-    end 
+    end
+   
+ 
+    // #0.5 clk = 1'b0; reset = 1;
+    // #0.5 clk = 1'b1;  
+    // #0.5 clk = 1'b0; reset = 0; 
+    // #0.5 clk = 1'b1;  
+    
+    // acc_file = $fopen("activation_tile0.txt", "r");
+
+    //   // Following three lines are to remove the first three comment lines of the file
+    //   out_scan_file = $fscanf(out_file,"%s", answer); 
+    //   out_scan_file = $fscanf(out_file,"%s", answer); 
+    //   out_scan_file = $fscanf(out_file,"%s", answer); 
+
+    // for (j=0; j<len_kij+1; j=j+1) begin 
+
+    //   #0.5 clk = 1'b0;   
+    //     if (j<len_kij) begin CEN_pmem = 0; WEN_pmem = 1; acc_scan_file = $fscanf(acc_file,"%11b", A_pmem); end
+    //                    else  begin CEN_pmem = 1; WEN_pmem = 1; end
+
+    //     if (j>0)  acc = 1;  
+    //   #0.5 clk = 1'b1;   
+    // end
+
+    // #0.5 clk = 1'b0; acc = 0;
+    // #0.5 clk = 1'b1; 
   end
 
 

@@ -102,6 +102,103 @@ core  #(.bw(bw), .col(col), .row(row)) core_instance (
   .sfp_out(sfp_out), 
 	.reset(reset)); 
 
+initial begin
+  $dumpfile("core_tb.vcd");
+  $dumpvars(0,core_tb);
+  // dump JUST the memory explicitly
+  $dumpvars(1, core_instance.PSUM_sram.memory[0]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[1]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[2]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[3]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[4]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[5]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[6]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[7]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[8]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[9]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[10]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[11]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[12]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[13]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[14]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[15]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[16]);
+
+  $dumpvars(1, core_instance.PSUM_sram.memory[32]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[33]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[34]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[35]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[36]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[37]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[38]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[39]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[40]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[41]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[42]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[43]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[44]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[45]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[46]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[47]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[48]);
+
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[1024]); // Showing weight loading
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[1025]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[1026]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[1027]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[1028]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[1029]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[1030]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[1031]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[1032]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[1033]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[1034]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[1035]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[1036]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[1037]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[1038]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[1039]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[1040]);
+
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[0]); // Showing weight loading
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[1]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[2]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[3]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[4]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[5]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[6]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[7]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[8]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[9]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[10]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[11]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[12]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[13]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[14]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[15]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[16]);
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[17]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[18]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[19]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[20]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[21]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[22]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[23]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[24]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[25]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[26]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[27]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[28]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[29]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[30]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[31]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[32]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[33]);
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[34]);
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[35]);
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[36]);
+
+end 
 
 function [31:0] onij;
     input [31:0] nij;
@@ -397,7 +494,13 @@ initial begin
           A_pmem = o_nij_index + 32*oc_group; // Offset the address by 32 bits [15:0] OC_GROUP 0 and [63:32] OC_GROUP 1
         end else begin
           CEN_pmem = 1;
-        end        
+        end 
+        if (t == 34)begin 
+          // Last `t` before goes all X: all start at 18
+          // 0: 52, 1-2: 34, 3-5: 35; 6-8: 36
+          $timeformat(-9, 2, " ns", 20); // Unit in ns (-9), 2 decimal places, " ns" suffix, field width 20 
+          $display("kij = %d, sfpout: %16b sfpout: %d time: %t", kij, sfp_out[15:0], $signed(sfp_out[15:0]), $time);
+        end         
       end
 
         #0.5 clk = 1'b1; 
@@ -686,6 +789,12 @@ initial begin
           A_pmem = o_nij_index;
         end else begin
           CEN_pmem = 1;
+        end 
+        if (t == 34)begin 
+          // Last `t` before goes all X: all start at 18
+          // 0: 52, 1-2: 34, 3-5: 35; 6-8: 36
+          $timeformat(-9, 2, " ns", 20); // Unit in ns (-9), 2 decimal places, " ns" suffix, field width 20 
+          $display("kij = %d, sfpout: %16b sfpout: %d time: %t", kij, sfp_out[15:0], $signed(sfp_out[15:0]), $time);
         end         
       end
 

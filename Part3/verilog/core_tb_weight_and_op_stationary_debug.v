@@ -123,7 +123,67 @@ core  #(.bw(bw), .col(col), .row(row)) core_instance (
 	.ofifo_valid(ofifo_valid),
     .D_xmem(D_xmem), 
     .sfp_out(sfp_out), 
-	.reset(reset));  
+	.reset(reset)); 
+initial begin
+  $dumpfile("core_tb.vcd");
+  $dumpvars(0,core_tb);
+  // dump JUST the memory explicitly
+  $dumpvars(1, core_instance.PSUM_sram.memory[0]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[1]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[2]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[3]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[4]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[5]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[6]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[7]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[8]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[9]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[10]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[11]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[12]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[13]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[14]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[15]); 
+  $dumpvars(1, core_instance.PSUM_sram.memory[16]);
+
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[0]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[1]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[2]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[3]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[4]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[5]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[6]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[7]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[8]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[9]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[10]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[11]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[12]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[13]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[14]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[15]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[16]);
+
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[576 + 0]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[576 + 1]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[576 + 2]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[576 + 3]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[576 + 4]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[576 + 5]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[576 + 6]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[576 + 7]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[576 + 8]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[576 + 9]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[576 + 10]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[576 + 11]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[576 + 12]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[576 + 13]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[576 + 14]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[576 + 15]); 
+  $dumpvars(1, core_instance.ACTIVATION_WEIGHTS_sram.memory[576 + 16]);
+
+  
+end 
 
 //weight stationary helper function for onij calculation
 function [31:0] onij;
@@ -615,6 +675,14 @@ initial begin
                 end else begin
                     CEN_pmem = 1;
                 end 
+                if (t == 34)begin 
+                    // Last `t` before goes all X: all start at 18
+                    // 0: 52, 1-2: 34, 3-5: 35; 6-8: 36
+                    $timeformat(-9, 2, " ns", 20); // Unit in ns (-9), 2 decimal places, " ns" suffix, field width 20 
+                    $display("kij = %d, sfpout: %16b sfpout: %d time: %t", kij, sfp_out[15:0],sfp_out[15:0], $time);
+                end
+                // $timeformat(-9, 2, " ns", 20); // Unit in ns (-9), 2 decimal places, " ns" suffix, field width 20 
+                // $display("t: %d, kij = %d, sfpout: %16b sfpout: %d time: %t", t, kij, sfp_out[15:0],sfp_out[15:0], $time);          
                 end
 
                 #0.5 clk = 1'b1; 
