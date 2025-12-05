@@ -34,7 +34,7 @@ AI models, especially Deep Neural Networks (DNNs), need specialized hardware to 
 * If a weight is 0, we turn off the MAC unit by keeping it's input ports constant. 
 * Instead, for that MAC tile we will simply pass down the activations from west to east and the partial sum from north to south.
 * We estimate about a 12.5% reduction in dynamic power consumption for a given MAC tile. 
-* Found in the [Part4/Alpha1](./Part4/Alpha1/) directory
+* Found in the [Part4/Alpha1](./Part4/Alpha1Sparsity) directory
 
 ### Write-Buffered SRAM:
 * Instead of having two SRAMs for simultaneous writing and reading, we have the write address delayed by one clock cycle to enable similar functionality using singular SRAM.
@@ -42,6 +42,7 @@ AI models, especially Deep Neural Networks (DNNs), need specialized hardware to 
 ![image](./Part4/WriteBufferedSRAM.PNG)
 
 * This gives you all the efficiency benefits without the complexities of having two SRAMs when time to perform the accumulation step. 
+* **NOTE:** this alpha is *already included in our Part 1 - 3 implementations*.
 
 ### Leaky ReLu:
 * We apply leaky ReLu activation function in the special function processor by performing a arithmetic right shift of 6 ( alpha = 0.015625) to negative input instead of outputting zeros. 
@@ -49,7 +50,7 @@ AI models, especially Deep Neural Networks (DNNs), need specialized hardware to 
 * This improves the flow of gradients during backpropagation and leads to more stable training.
   * We trained the model from Part1 that achieved 90.42% accuracy, except this time using LeakyReLu, and saw an improved accuracy of 91.37%. 
   * Additionally, it reached 90% accuracy in about 26 epochs rather than 40 epochs.
-  * Jupyter Notebook found [here](./Part4/Alpha1+2/python/VGG16_Quantization_aware_train_leaky_relu.ipynb)
+  * Jupyter Notebook found [here](./Part4/Alpha3LeakyReLU/python/VGG16_Quantization_aware_train_leaky_relu.ipynb)
 
 ### Tiling: 
 * 16x16 tiling allows us to perform the convolution stage on the model with less shrinking of the input and output dimensions. 
