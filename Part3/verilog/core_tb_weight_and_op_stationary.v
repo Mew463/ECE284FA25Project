@@ -69,6 +69,7 @@ reg load;
 //output stationary instructions
 reg pass_psum;
 reg recall_psum;
+reg relu = 0;
 
 reg [8*128:1] w_file_name; // take care of weight file one output channel at a time
 wire ofifo_valid;
@@ -91,6 +92,7 @@ integer error;
 
 assign inst_q[63] = debug; // Debug signal for psum_sram
 assign inst_q[41:40] = actFunc;
+assign inst_q[45] = relu;
 assign inst_q[39] = pass_psum;
 assign inst_q[38] = recall_psum;
 assign inst_q[37] = l1_wr;
@@ -221,6 +223,7 @@ initial begin
     pass_psum = 0; //output stationary inst[1]
     recall_psum = 0; //output stationary inst[0]
     REN_pmem = 0;
+    relu = 0;
     WEN_pmem = 0;
     psum_sram_ptr = 0;
     sfu_passthrough = 0;
@@ -378,6 +381,7 @@ initial begin
             #0.5 clk = 1'b0; 
             recall_psum = 1; // MAC -> OFIFO 
             sfu_passthrough = 1; // Enable passthrough in SFP
+            relu = 1;
             A_pmem = 8;
             #0.5 clk = 1'b1;
 
@@ -394,7 +398,7 @@ initial begin
                 #0.5 clk = 1'b1;
             end
 
-            CEN_pmem = 1; WEN_pmem = 0; // Disable
+            CEN_pmem = 1; WEN_pmem = 0; relu = 0; sfu_passthrough = 0; acc = 0;// Disable
 
             out_file = $fopen("output_stationary_data/out_relu.txt", "r");  
             // out_file = $fopen("out.txt", "r");  
@@ -415,6 +419,7 @@ initial begin
                 A_pmem = i;
                 sfu_passthrough = 0;
                 acc = 0;
+                relu = 0;
                 actFunc[1] = 1;
                 #0.5 clk = 1'b1; #0.5 clk = 1'b0; 
                 out_scan_file = $fscanf(out_file,"%128b", answer); // reading from out file to answer
@@ -484,6 +489,7 @@ initial begin
         sfu_passthrough = 0;
         pass_psum = 0;
         recall_psum = 0;
+        relu = 0;
 
         x_file = $fopen("weight_stationary_data/activation_tile0.txt", "r");
         // Following three lines are to remove the first three comment lines of the file
@@ -640,7 +646,7 @@ initial begin
             WEN_xmem = 1; CEN_xmem = 0;
             #0.5 clk = 1'b1; 
             nij = -1;
-            for (t=0; t<len_nij + col + row; t=t+1) begin  // 36 + 8 + 8 = 52
+            for (t=0; t<len_nij + col + row + 1; t=t+1) begin  // 36 + 8 + 8 = 52
                 #0.5 clk = 1'b0; 
                 if(t<len_nij) begin
 
@@ -666,6 +672,9 @@ initial begin
                     sfu_passthrough = 0;
                     acc = 1;
                 end
+                if (kij == 8) begin
+                    relu = 1; // Relu on the last in addition to accumulating
+                end
                 
                 if(o_nij_index >= 0 && o_nij_index < 16) begin 
                     if (o_nij_index > 0) begin 
@@ -688,11 +697,12 @@ initial begin
                 #0.5 clk = 1'b1; 
             end
             #0.5 clk = 1'b0;
-            #0.5 clk = 1'b1; #0.5 clk = 1'b0; #0.5 clk = 1'b1; #0.5 clk = 1'b0; //TWO CLOCK CYCLES TO HIT THE LAST NIJ VALUES
+            #0.5 clk = 1'b1; #0.5 clk = 1'b0; //TWO CLOCK CYCLES TO HIT THE LAST NIJ VALUES
             CEN_xmem = 1; // Disable SRAM weights/activation
             CEN_pmem = 1; // Disable SRAM psum 
             WEN_pmem = 0;
             acc = 0;
+            relu = 0;
             l0_wr = 0; // Disable L0 writing
             l0_rd = 0; execute = 0; // Disable L0 and PE execute
             ofifo_rd = 0; // Disable ofifo reading
