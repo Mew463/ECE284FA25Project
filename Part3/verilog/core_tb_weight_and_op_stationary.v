@@ -259,9 +259,9 @@ initial begin
     //output stationary version //
     for (zz = 0; zz < 2; zz = zz + 1) begin
         if (zz == 0) 
-            output_stationary = 0;
-        else begin
             output_stationary = 1;
+        else begin
+            output_stationary = 0;
         end
 
 
@@ -377,8 +377,8 @@ initial begin
             #0.5 clk = 1'b0; 
             recall_psum = 1; // MAC -> OFIFO 
             sfu_passthrough = 1; // Enable passthrough in SFP
-            // relu = 1; //start doing relu on output
-            relu = 0;
+            relu = 1; //start doing relu on output
+            // relu = 0;
             A_pmem = 8;
             #0.5 clk = 1'b1;
 
@@ -397,8 +397,8 @@ initial begin
 
             CEN_pmem = 1; WEN_pmem = 0; relu = 0; sfu_passthrough = 0; acc = 0;// Disable
 
-            // out_file = $fopen("output_stationary_data/out_relu.txt", "r");  
-            out_file = $fopen("out.txt", "r");  
+            out_file = $fopen("output_stationary_data/out_relu.txt", "r");  
+            // out_file = $fopen("out.txt", "r");  
 
             // Following three lines are to remove the first three comment lines of the file
             out_scan_file = $fscanf(out_file,"%s", answer); 
@@ -407,7 +407,7 @@ initial begin
 
             error = 0;
 
-            $display("############ Verification Start during accumulation #############"); 
+            $display("############ Verification Start #############"); 
             #0.5 clk = 1'b0; 
             #0.5 clk = 1'b1; 
             #0.5 clk = 1'b0; 
@@ -417,7 +417,7 @@ initial begin
                 sfu_passthrough = 0;
                 acc = 0;
                 relu = 0;
-                actFunc[1] = 1;
+                actFunc[1] = 1; //relu = 1;
                 #0.5 clk = 1'b1; #0.5 clk = 1'b0; 
                 out_scan_file = $fscanf(out_file,"%128b", answer); // reading from out file to answer
                 if (sfp_out == answer)
