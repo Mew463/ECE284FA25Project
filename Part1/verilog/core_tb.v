@@ -392,6 +392,7 @@ initial begin
     CEN_pmem = 1; // Disable SRAM psum 
     WEN_pmem = 0;
     acc = 0;
+    relu = 0;
     l0_wr = 0; // Disable L0 writing
     l0_rd = 0; execute = 0; // Disable L0 and PE execute
     ofifo_rd = 0; // Disable ofifo reading
@@ -438,6 +439,7 @@ initial begin
   for (i=0; i<len_onij; i=i+1) begin 
     CEN_pmem = 0;
     A_pmem = i;
+    sfu_passthrough = 0;
     #0.5 clk = 1'b1; #0.5 clk = 1'b0; 
     out_scan_file = $fscanf(out_file,"%128b", answer); // reading from out file to answer
     if (sfp_out == answer)
