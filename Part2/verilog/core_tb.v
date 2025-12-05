@@ -43,6 +43,7 @@ reg REN_pmem_q = 0;
 reg REN_pmem;
 reg separateweights = 0;
 reg debug = 0;
+reg relu = 0;
 
 reg [bw*row-1:0] D_xmem;
 reg [2*bw*row-1:0] D_xmem_temp; //added for 2bp2
@@ -72,6 +73,7 @@ integer error;
 
 assign inst_q[63] = debug; // Debug signal for psum_sram
 // assign inst_q[37:36] = actFunc;
+assign inst_q[45] = relu;
 assign inst_q[36] = separateweights;
 assign inst_q[35] = REN_pmem;
 assign inst_q[34] = sfu_passthrough;
@@ -237,6 +239,7 @@ initial begin
   WEN_pmem = 0;
   psum_sram_ptr = 0;
   sfu_passthrough = 0;
+  relu = 0;
 
 //   /*
 //   ------------------------- 2 BIT ACTIVATIONS TEST Part a-------------------------
@@ -486,6 +489,9 @@ initial begin
           sfu_passthrough = 0;
           acc = 1;
         end
+        if (kij == 8) begin
+          relu = 1; // Relu on the last in addition to accumulating
+        end
         
         if(o_nij_index >= 0 && o_nij_index < 16) begin 
           if (o_nij_index > 0) begin 
@@ -511,6 +517,7 @@ initial begin
     CEN_pmem = 1; // Disable SRAM psum 
     WEN_pmem = 0;
     acc = 0;
+    relu = 0;
     l0_wr = 0; // Disable L0 writing
     l0_rd = 0; execute = 0; // Disable L0 and PE execute
     ofifo_rd = 0; // Disable ofifo reading
@@ -599,6 +606,7 @@ initial begin
   WEN_pmem = 0;
   psum_sram_ptr = 0;
   sfu_passthrough = 0;
+  relu = 0;
 
   x_file = $fopen("part2b_vals/activation_tile0.txt", "r");
   // Following three lines are to remove the first three comment lines of the file
@@ -781,6 +789,9 @@ initial begin
           sfu_passthrough = 0;
           acc = 1;
         end
+        if (kij == 8) begin
+          relu = 1; // Relu on the last in addition to accumulating
+        end
         
         if(o_nij_index >= 0 && o_nij_index < 16) begin 
           if (o_nij_index > 0) begin 
@@ -807,6 +818,7 @@ initial begin
     WEN_pmem = 0;
     acc = 0;
     l0_wr = 0; // Disable L0 writing
+    relu = 0;
     l0_rd = 0; execute = 0; // Disable L0 and PE execute
     ofifo_rd = 0; // Disable ofifo reading
     #0.5 clk = 1'b1; #0.5 clk = 1'b0; #0.5 clk = 1'b1;
