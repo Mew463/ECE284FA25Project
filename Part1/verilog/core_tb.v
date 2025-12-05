@@ -46,6 +46,7 @@ reg REN_pmem;
 // reg [1:0] actFunc_q = 0;
 // reg [1:0] actFunc;
 reg debug = 0;
+reg relu = 0;
 
 reg [bw*row-1:0] D_xmem;
 reg [psum_bw*col-1:0] answer;
@@ -89,6 +90,7 @@ integer error;
 // assign inst_q[0]   = load_q; 
 assign inst_q[63] = debug; // Debug signal for psum_sram
 // assign inst_q[37:36] = actFunc;
+assign inst_q[45] = relu;
 assign inst_q[35] = REN_pmem;
 assign inst_q[34] = sfu_passthrough;
 assign inst_q[33] = acc;
@@ -177,6 +179,7 @@ initial begin
   WEN_pmem = 0;
   psum_sram_ptr = 0;
   sfu_passthrough = 0;
+  relu = 0;
 
   // $dumpfile("core_tb.vcd");
   // $dumpvars(0,core_tb);
@@ -333,7 +336,7 @@ initial begin
     #0.5 clk = 1'b1; 
     skippedFirst = 0;
     nij = -1;
-    for (t=0; t<len_nij + col + row; t=t+1) begin  // 36 + 8 + 8 = 52
+    for (t=0; t<len_nij + col + row+1; t=t+1) begin  // 36 + 8 + 8 = 52
       #0.5 clk = 1'b0; 
       if(t<len_nij) begin
 
@@ -355,9 +358,12 @@ initial begin
         if (kij == 0) begin  
           sfu_passthrough = 1; // make SFU pass first KIJ index; ofifo goes to psum sram
           acc = 0;
-        end else begin
+        end else  begin
           sfu_passthrough = 0;
           acc = 1;
+        end 
+        if (kij == 8) begin
+          relu = 1; // Relu on the last in addition to accumulating
         end
         
         if(o_nij_index >= 0 && o_nij_index < 16) begin 
@@ -381,11 +387,12 @@ initial begin
         #0.5 clk = 1'b1; 
     end
     #0.5 clk = 1'b0;
-    #0.5 clk = 1'b1; #0.5 clk = 1'b0; #0.5 clk = 1'b1; #0.5 clk = 1'b0; //TWO CLOCK CYCLES TO HIT THE LAST NIJ VALUES
+    #0.5 clk = 1'b1; #0.5 clk = 1'b0;  //TWO CLOCK CYCLES TO HIT THE LAST NIJ VALUES
     CEN_xmem = 1; // Disable SRAM weights/activation
     CEN_pmem = 1; // Disable SRAM psum 
     WEN_pmem = 0;
     acc = 0;
+    relu = 0;
     l0_wr = 0; // Disable L0 writing
     l0_rd = 0; execute = 0; // Disable L0 and PE execute
     ofifo_rd = 0; // Disable ofifo reading
@@ -398,20 +405,21 @@ initial begin
 
   
   /* RELU AND ALPHA: LEAKY_RELU TEST*/
-  #0.5 clk = 1'b0; 
-  #0.5 clk = 1'b1; 
-  #0.5 clk = 1'b0;
-  for (i=0; i<len_onij; i=i+1) begin 
-    CEN_pmem = 0;
-    A_pmem = i;
-    WEN_pmem = 1;
-    sfu_passthrough = 0;
-    acc = 0;
-    #0.5 clk = 1'b1;  
-  end
-  #0.5 clk = 1'b0;
-  CEN_pmem = 1; // Disable SRAM psum 
-  WEN_pmem = 0;
+  // #0.5 clk = 1'b0; 
+  // #0.5 clk = 1'b1; 
+  // #0.5 clk = 1'b0;
+  // for (i=0; i<len_onij; i=i+1) begin 
+  //   CEN_pmem = 0;
+  //   A_pmem = i;
+  //   WEN_pmem = 1;
+  //   sfu_passthrough = 0;
+  //   relu = 1;
+  //   acc = 0;
+  //   #0.5 clk = 1'b1;  
+  // end
+  // #0.5 clk = 1'b0;
+  // CEN_pmem = 1; // Disable SRAM psum 
+  // WEN_pmem = 0;
   // #################  SELECT OUTPUT FILE ################# //
   // out_file = $fopen("out.txt", "r");  
 
@@ -429,9 +437,11 @@ initial begin
   #0.5 clk = 1'b0; 
   #0.5 clk = 1'b1; 
   #0.5 clk = 1'b0; 
+
   for (i=0; i<len_onij; i=i+1) begin 
     CEN_pmem = 0;
     A_pmem = i;
+    sfu_passthrough = 0;
     #0.5 clk = 1'b1; #0.5 clk = 1'b0; 
     out_scan_file = $fscanf(out_file,"%128b", answer); // reading from out file to answer
     if (sfp_out == answer)
