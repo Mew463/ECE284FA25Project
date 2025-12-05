@@ -413,7 +413,7 @@ initial begin
   CEN_pmem = 1; // Disable SRAM psum 
   WEN_pmem = 0;
   // #################  SELECT OUTPUT FILE ################# //
-  out_file = $fopen("out.txt", "r");  
+  // out_file = $fopen("out.txt", "r");  
 
    // ReLU VER 
   out_file = $fopen("out_relu.txt", "r");
