@@ -747,7 +747,7 @@ initial begin
         
         end
 
-        answer = 0;
+        answer = 127'b0;
 
 
         if (error == 0) begin
