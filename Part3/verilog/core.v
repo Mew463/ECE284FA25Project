@@ -22,6 +22,7 @@ module core(clk, inst, ofifo_valid, D_xmem, sfp_out, reset);
 
     // Expand the instruction bus from the core_tb
     wire debug = inst[63];
+    wire relu = inst[45];
     wire[1:0] actFunc = inst[41:40];
     wire pass_psum = inst[39];
     wire recall_psum = inst[38];
@@ -148,9 +149,10 @@ module core(clk, inst, ofifo_valid, D_xmem, sfp_out, reset);
             .psum_in(sram_out[psum_bw*sfp_i - 1: psum_bw*(sfp_i-1)]),
             .ofifo_in(ofifo_out[psum_bw*sfp_i - 1: psum_bw*(sfp_i-1)]),
             .accum(acc),
-            .actFunc(actFunc),
+            //.actFunc(actFunc),
             .sfp_out(sram_in[psum_bw*sfp_i - 1: psum_bw*(sfp_i-1)]),
-            .passthrough(passthrough)
+            .passthrough(passthrough),
+            .relu(relu)
         );
     end
     assign sfp_out = sram_in;
