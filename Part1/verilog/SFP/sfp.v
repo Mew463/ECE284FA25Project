@@ -12,7 +12,7 @@ module sfp(psum_in, ofifo_in, accum, sfp_out, passthrough, relu);
     // input [1:0] actFunc;
     output [psum_bw-1:0] sfp_out;
     input passthrough;
-    wire accumulate = psum_in + ofifo_in;
+    wire [psum_bw-1:0]accumulate = psum_in + ofifo_in;
     // wire [psum_bw-1:0] accumulated;
     // assign accumulated = accum ? psum_in + ofifo_in: psum_in;
     // case ({passthrough, accum, relu})
@@ -27,9 +27,9 @@ module sfp(psum_in, ofifo_in, accum, sfp_out, passthrough, relu);
         begin
             case ({passthrough, accum, relu})
                 3'b000: sfp_func = psum_in;
-                3'b001: sfp_func = psum_in[15] ? 0 : psum_in;
+                3'b001: sfp_func = psum_in[15] ? 0 : psum_in; // Perform Relu
                 3'b010: sfp_func = psum_in + ofifo_in;
-                3'b011: sfp_func = accumulate[15] ? 0 : accumulate;  // ReLU    
+                3'b011: sfp_func = accumulate[15] ? 0 : accumulate;  // Accumulate and Relu    
                 default: sfp_func = ofifo_in;
             endcase
         end
