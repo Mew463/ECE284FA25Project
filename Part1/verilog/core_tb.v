@@ -46,6 +46,7 @@ reg REN_pmem;
 // reg [1:0] actFunc_q = 0;
 // reg [1:0] actFunc;
 reg debug = 0;
+reg relu = 0;
 
 reg [bw*row-1:0] D_xmem;
 reg [psum_bw*col-1:0] answer;
@@ -89,6 +90,7 @@ integer error;
 // assign inst_q[0]   = load_q; 
 assign inst_q[63] = debug; // Debug signal for psum_sram
 // assign inst_q[37:36] = actFunc;
+assign inst_q[45] = relu;
 assign inst_q[35] = REN_pmem;
 assign inst_q[34] = sfu_passthrough;
 assign inst_q[33] = acc;
@@ -177,6 +179,7 @@ initial begin
   WEN_pmem = 0;
   psum_sram_ptr = 0;
   sfu_passthrough = 0;
+  relu = 0;
 
   // $dumpfile("core_tb.vcd");
   // $dumpvars(0,core_tb);
@@ -355,9 +358,12 @@ initial begin
         if (kij == 0) begin  
           sfu_passthrough = 1; // make SFU pass first KIJ index; ofifo goes to psum sram
           acc = 0;
-        end else begin
+        end else  begin
           sfu_passthrough = 0;
           acc = 1;
+        end 
+        if (kij == 8) begin
+          relu = 1; // Relu on the last in addition to accumulating
         end
         
         if(o_nij_index >= 0 && o_nij_index < 16) begin 
