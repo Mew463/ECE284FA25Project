@@ -1,6 +1,6 @@
 // Reads from PSUM SRAM and read from Output FIFO
 // sfp_out --> PSUM_SRAM
-module sfp(psum_in, ofifo_in, accum, relu, sfp_out, passthrough);
+module sfp(psum_in, ofifo_in, accum, sfp_out, passthrough, relu);
 // module sfp(psum_in, ofifo_in, accum, actFunc, sfp_out, passthrough);
 
     parameter bw = 4; //weight and activation width
