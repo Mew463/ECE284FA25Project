@@ -747,6 +747,8 @@ initial begin
         
         end
 
+        answer = 0;
+
 
         if (error == 0) begin
             $display("############ No error detected ##############"); 
