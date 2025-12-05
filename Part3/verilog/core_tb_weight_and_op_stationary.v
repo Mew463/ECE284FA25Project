@@ -381,7 +381,7 @@ initial begin
             #0.5 clk = 1'b0; 
             recall_psum = 1; // MAC -> OFIFO 
             sfu_passthrough = 1; // Enable passthrough in SFP
-            relu = 1;
+            relu = 1; //start doing relu on output
             A_pmem = 8;
             #0.5 clk = 1'b1;
 
