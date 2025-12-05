@@ -387,7 +387,7 @@ initial begin
         #0.5 clk = 1'b1; 
     end
     #0.5 clk = 1'b0;
-    #0.5 clk = 1'b1; #0.5 clk = 1'b0; #0.5 clk = 1'b1; #0.5 clk = 1'b0; //TWO CLOCK CYCLES TO HIT THE LAST NIJ VALUES
+    #0.5 clk = 1'b1; #0.5 clk = 1'b0;  //TWO CLOCK CYCLES TO HIT THE LAST NIJ VALUES
     CEN_xmem = 1; // Disable SRAM weights/activation
     CEN_pmem = 1; // Disable SRAM psum 
     WEN_pmem = 0;
@@ -439,7 +439,6 @@ initial begin
   #0.5 clk = 1'b0; 
 
   for (i=0; i<len_onij; i=i+1) begin 
-    relu = 1;
     CEN_pmem = 0;
     A_pmem = i;
     sfu_passthrough = 0;
